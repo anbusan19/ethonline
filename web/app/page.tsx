@@ -5,6 +5,9 @@
 import Navbar from "@/components/Navbar";
 import TechButton from "@/components/ui/TechButton";
 import ParticleJet from "@/components/ParticleJet";
+import LiveStats from "@/components/LiveStats";
+import RestockPreview from "@/components/RestockPreview";
+import TrackBadges from "@/components/TrackBadges";
 import { MoveRight } from "lucide-react";
 
 const STEPS = [
@@ -84,6 +87,8 @@ export default function Home() {
           </div>
         </section>
 
+        <LiveStats />
+
         {/* How it works */}
         <section className="py-24 px-6 md:px-12 lg:px-20 border-t border-white/10" id="how">
           <p className="font-mono text-blue-500 text-xs tracking-[0.2em] mb-4">01 · FLOW</p>
@@ -107,11 +112,23 @@ export default function Home() {
           </ol>
         </section>
 
+        {/* Live reasoning, proven on the page itself */}
+        <section className="py-24 px-6 md:px-12 lg:px-20 border-t border-white/10 bg-black/20" id="live">
+          <p className="font-mono text-blue-500 text-xs tracking-[0.2em] mb-4">02 · LIVE REASONING</p>
+          <h2 className="text-3xl md:text-4xl font-light text-white mb-4">Not asserted — computed, right now</h2>
+          <p className="text-gray-400 max-w-2xl mb-12 text-sm md:text-base">
+            This isn&rsquo;t a mock-up of what restock reasoning would look like — it&rsquo;s the actual
+            output of <code className="text-gray-300">src/reasoning/restock.ts</code> against the live
+            subgraph, re-computed on every page load.
+          </p>
+          <RestockPreview />
+        </section>
+
         {/* Design philosophy */}
-        <section className="py-24 px-6 md:px-12 lg:px-20 border-t border-white/10 bg-black/20" id="different">
+        <section className="py-24 px-6 md:px-12 lg:px-20 border-t border-white/10" id="different">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
             <div>
-              <p className="font-mono text-blue-500 text-xs tracking-[0.2em] mb-4">02 · DESIGN</p>
+              <p className="font-mono text-blue-500 text-xs tracking-[0.2em] mb-4">03 · DESIGN</p>
               <h2 className="text-3xl md:text-4xl font-light text-white mb-4">Device-backed, not device-blocking</h2>
               <p className="text-gray-400 text-sm md:text-base leading-relaxed">
                 The Ledger's job is scoped to one thing: nobody but this device's Key Ring can ever
@@ -142,7 +159,7 @@ export default function Home() {
 
         {/* Stack */}
         <section className="py-24 px-6 md:px-12 lg:px-20 border-t border-white/10" id="stack">
-          <p className="font-mono text-blue-500 text-xs tracking-[0.2em] mb-4">03 · STACK</p>
+          <p className="font-mono text-blue-500 text-xs tracking-[0.2em] mb-4">04 · STACK</p>
           <h2 className="text-3xl md:text-4xl font-light text-white mb-12">What it&rsquo;s made of</h2>
           <ul className="divide-y divide-white/10 border-t border-b border-white/10">
             {STACK.map(([name, desc]) => (
@@ -152,6 +169,20 @@ export default function Home() {
               </li>
             ))}
           </ul>
+        </section>
+
+        {/* Track qualification */}
+        <section className="py-24 px-6 md:px-12 lg:px-20 border-t border-white/10 bg-black/20" id="tracks">
+          <p className="font-mono text-blue-500 text-xs tracking-[0.2em] mb-4">05 · TRACKS</p>
+          <h2 className="text-3xl md:text-4xl font-light text-white mb-4">Three sponsors, one build</h2>
+          <p className="text-gray-400 max-w-2xl mb-12 text-sm md:text-base">
+            Full qualification checklists and evidence live in the{" "}
+            <a href="https://github.com/anbusan19" className="text-blue-400 underline underline-offset-4">
+              README
+            </a>
+            .
+          </p>
+          <TrackBadges />
         </section>
 
         {/* Footer disclosure */}
