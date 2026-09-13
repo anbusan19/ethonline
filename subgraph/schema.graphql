@@ -1,0 +1,34 @@
+# Vault402 subgraph schema — Ethereum Sepolia (new this event, Graph "Start Fresh" pool).
+# PLACEHOLDER — entities described in README "Restock & price-comparison flow in detail";
+# fields not yet finalized against the deployed PurchaseLog contract's actual event shape.
+
+type Purchase @entity(immutable: true) {
+  id: ID!
+  buyer: Bytes!
+  item: Item!
+  vendor: Vendor!
+  quantity: BigInt!
+  price: BigInt!
+  timestamp: BigInt!
+}
+
+type Item @entity {
+  id: ID!
+  name: String!
+  purchases: [Purchase!]! @derivedFrom(field: "item")
+}
+
+type Vendor @entity {
+  id: ID!
+  name: String!
+  purchases: [Purchase!]! @derivedFrom(field: "vendor")
+}
+
+# Shared shape if multiple vendor sources are wired in (see README).
+type PriceQuote @entity {
+  id: ID!
+  vendor: Vendor!
+  item: Item!
+  price: BigInt!
+  timestamp: BigInt!
+}
