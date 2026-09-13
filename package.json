@@ -12,6 +12,7 @@
     "check:ledger": "tsx scripts/check-ledger.ts",
     "check:subgraph": "tsx scripts/check-subgraph.ts",
     "check:all": "npm run check:blocky402 && npm run check:ledger && npm run check:subgraph",
+    "check:hedera-key-gate": "tsx scripts/check-hedera-key-gate.ts",
     "contracts:compile": "tsx scripts/compile-contracts.ts",
     "contracts:deploy": "tsx scripts/deploy-purchase-log.ts",
     "contracts:backfill": "tsx scripts/backfill-purchase-history.ts",
