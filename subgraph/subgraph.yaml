@@ -1,8 +1,9 @@
 specVersion: 1.0.0
 description: >
   Vault402 PurchaseLog subgraph — Ethereum Sepolia. New this event (Graph
-  "Start Fresh" pool). PLACEHOLDER: address/startBlock not yet set (contract
-  not deployed).
+  "Start Fresh" pool). address/startBlock are patched in by
+  scripts/deploy-purchase-log.ts after a real deploy — do not hand-edit
+  the placeholders below except to confirm a deploy hasn't run yet.
 schema:
   file: ./schema.graphql
 dataSources:
@@ -23,8 +24,10 @@ dataSources:
         - Vendor
       abis:
         - name: PurchaseLog
-          file: ../contracts/PurchaseLog.json # TODO: generate ABI after compiling contract
+          file: ../contracts/artifacts/PurchaseLog.json # written by npm run contracts:compile
       eventHandlers:
+        # Event shape is unchanged (recordPurchase's new `timestamp` param feeds the
+        # existing event field, doesn't add one) — see contracts/PurchaseLog.sol.
         - event: PurchaseRecorded(indexed address,string,uint256,uint256,string,uint256)
           handler: handlePurchaseRecorded
       file: ./src/mapping.ts
