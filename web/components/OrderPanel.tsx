@@ -58,8 +58,8 @@ export default function OrderPanel() {
       <div className="chat__scroll">
         {!order && !itemsText && (
           <div className="chat__empty">
-            <p className="chat__greeting">What do you need?</p>
-            <p className="chat__empty-sub">Say it in a sentence — the agent checks your real restock data too</p>
+            <p className="chat__greeting">Craving Something?</p>
+            <p className="chat__empty-sub"></p>
           </div>
         )}
 
