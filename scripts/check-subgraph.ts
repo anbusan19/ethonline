@@ -7,7 +7,12 @@ import { env } from "../src/config/env.js";
 // Public, well-known subgraph on The Graph's decentralized network — used purely to
 // prove SUBGRAPH_STUDIO_API_KEY authenticates against the gateway. Swap for
 // SUBGRAPH_QUERY_URL / the real PurchaseLog subgraph id once it's deployed.
-const PROBE_SUBGRAPH_ID = "5zvR82QoaXYFyDEKLZ9t6v9adgnp9YfVjcxeCsz6y6R8"; // Uniswap V3, mainnet
+//
+// NOTE: gateway.thegraph.com returned a misleading "API key not found" for a valid,
+// active Studio key — gateway-arbitrum.network.thegraph.com is the endpoint that
+// actually works. Verified against ENS's mainnet subgraph.
+const PROBE_SUBGRAPH_ID = "5XqPmWe6gjyrJtFn9cLy237i4cWw2j9HcUJEXsP5qGtH"; // ENS, mainnet
+const GATEWAY_BASE = "https://gateway-arbitrum.network.thegraph.com";
 
 function mask(key: string): string {
   return key.length <= 8 ? "****" : `${key.slice(0, 4)}...${key.slice(-4)}`;
@@ -15,8 +20,7 @@ function mask(key: string): string {
 
 async function main(): Promise<void> {
   const apiKey = env.subgraphStudioApiKey();
-  const queryUrl =
-    env.subgraphQueryUrl() ?? `https://gateway.thegraph.com/api/${apiKey}/subgraphs/id/${PROBE_SUBGRAPH_ID}`;
+  const queryUrl = env.subgraphQueryUrl() ?? `${GATEWAY_BASE}/api/${apiKey}/subgraphs/id/${PROBE_SUBGRAPH_ID}`;
 
   console.log(`Checking Subgraph Studio gateway with key ${mask(apiKey)} ...`);
 
