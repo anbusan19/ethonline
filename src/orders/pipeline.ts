@@ -10,13 +10,33 @@
 // the cost of the agent having attempted the task).
 
 import { checkWalletBalance } from "../checkout/check-wallet-balance.js";
+import { searchProducts } from "../checkout/search-products.js";
 import { addToCart } from "../checkout/add-to-cart.js";
 import { viewCart } from "../checkout/view-cart.js";
 import { checkout } from "../checkout/checkout.js";
 import { verifyOrderPlaced } from "../checkout/verify-order.js";
 import { notifyUser } from "../checkout/notify.js";
 import { recordPurchase } from "../contracts/purchase-log-client.js";
-import { getOrder, updateOrder, type Order } from "./store.js";
+import { getOrder, updateOrder, type Order, type MatchedProduct } from "./store.js";
+
+function normalize(name: string): string {
+  return name.trim().toLowerCase().replace(/\s+/g, " ");
+}
+
+/** Best-effort match: cart-drawer item names and search-result names come from two
+ * different scrapes of the same site, so an exact match isn't guaranteed — fall back
+ * to substring containment either direction. */
+function findImageForCartItem(cartItemName: string, products: MatchedProduct[]): string | null {
+  const target = normalize(cartItemName);
+  for (const p of products) {
+    if (!p.name) continue;
+    const candidate = normalize(p.name);
+    if (candidate === target || candidate.includes(target) || target.includes(candidate)) {
+      return p.image;
+    }
+  }
+  return null;
+}
 
 function rupeesToNumber(price: string | null | undefined): number | null {
   if (!price) return null;
@@ -41,8 +61,27 @@ export async function runCheckoutPipeline(orderId: string): Promise<void> {
 
   await updateOrder(orderId, { status: "checking_out" });
 
+  // Search first (captures name/price/image — add-to-cart's own page scrape doesn't
+  // carry an image), then add the exact matched URL rather than searching again
+  // inside addToCart. Persisted as soon as we have it, well before checkout
+  // completes, so the UI has real product cards to show while "checking out" or
+  // "awaiting_user_decision" — not only after a fully completed order.
+  const products: MatchedProduct[] = [];
   for (const item of order.items) {
-    const added = await addToCart({ query: item });
+    const found = await searchProducts(item, 1);
+    const top = found.status === "ok" ? found.results[0] : null;
+    products.push({
+      requestedAs: item,
+      name: top?.name ?? null,
+      price: top?.price ?? null,
+      image: top?.image ?? null,
+      url: top?.url ?? null,
+    });
+
+    const added = top
+      ? await addToCart({ productUrl: top.url })
+      : await addToCart({ query: item });
+
     if (added.status !== "ok") {
       await notifyUser(
         `Order ${orderId}: couldn't add "${item}" to the cart (${added.error ?? "not found"}). ` +
@@ -50,6 +89,7 @@ export async function runCheckoutPipeline(orderId: string): Promise<void> {
       );
     }
   }
+  await updateOrder(orderId, { products });
 
   const cart = await viewCart();
   if (cart.status !== "ok" || cart.items.length === 0) {
@@ -112,7 +152,7 @@ export async function runCheckoutPipeline(orderId: string): Promise<void> {
   }
 
   const zepto: Order["zepto"] = {
-    items: cart.items,
+    items: cart.items.map((item) => ({ ...item, image: findImageForCartItem(item.name, products) })),
     total: cart.total ?? null,
     orderId: result.orderId ?? null,
     purchaseLogTxHashes: txHashes,

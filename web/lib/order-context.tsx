@@ -10,6 +10,17 @@ export interface ZeptoCartItem {
   name: string;
   quantity: number;
   price: string | null;
+  image?: string | null;
+}
+
+/** A product matched to a requested item during search/add-to-cart — present as soon
+ * as the agent finds something, before checkout completes (or even succeeds). */
+export interface MatchedProduct {
+  requestedAs: string;
+  name: string | null;
+  price: string | null;
+  image: string | null;
+  url: string | null;
 }
 
 export interface Order {
@@ -17,6 +28,7 @@ export interface Order {
   status: "payment_settled" | "checking_out" | "awaiting_user_decision" | "completed" | "canceled" | "failed";
   items: string[];
   x402: { transactionId: string; amountHbar: number; payer: string };
+  products?: MatchedProduct[];
   zepto?: { items: ZeptoCartItem[]; total: string | null; orderId: string | null; purchaseLogTxHashes: string[] };
   failureReason?: string;
   createdAt: string;

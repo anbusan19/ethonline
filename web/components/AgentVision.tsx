@@ -19,8 +19,43 @@ const ACTIVE_COLORS = { color1: "#1e40af", color2: "#60a5fa", color3: "#ffffff" 
 const ALERT_COLORS = { color1: "#7c2d12", color2: "#ef4444", color3: "#fbbf24" };
 const DONE_COLORS = { color1: "#14532d", color2: "#4ade80", color3: "#ffffff" };
 
+interface Tile {
+  key: string;
+  name: string;
+  price: string | null;
+  image: string | null;
+  quantity: number;
+  confirmed: boolean;
+}
+
+/** Prefer the confirmed cart (real quantity/price, post-checkout) over the
+ * search-matched products (pre-checkout, as soon as the agent finds something) —
+ * whichever is available, since zepto.items only exists once checkout actually runs. */
+function buildTiles(order: ReturnType<typeof useOrder>["order"]): Tile[] {
+  if (!order) return [];
+  if (order.zepto) {
+    return order.zepto.items.map((item, i) => ({
+      key: `${item.name}-${i}`,
+      name: item.name,
+      price: item.price,
+      image: item.image ?? null,
+      quantity: item.quantity,
+      confirmed: true,
+    }));
+  }
+  return (order.products ?? []).map((p, i) => ({
+    key: `${p.requestedAs}-${i}`,
+    name: p.name ?? p.requestedAs,
+    price: p.price,
+    image: p.image,
+    quantity: 1,
+    confirmed: false,
+  }));
+}
+
 export default function AgentVision() {
   const { order } = useOrder();
+  const tiles = buildTiles(order);
 
   const colors =
     order?.status === "awaiting_user_decision" || order?.status === "failed"
@@ -83,11 +118,33 @@ export default function AgentVision() {
                       : "Working…"}
             </p>
 
-            <ul className="vision__items">
-              {order.items.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
+            {tiles.length > 0 ? (
+              <div className="vision__tiles">
+                {tiles.map((tile) => (
+                  <div key={tile.key} className={`vision__tile ${tile.confirmed ? "vision__tile--confirmed" : ""}`}>
+                    <div className="vision__tile-image">
+                      {tile.image ? (
+                        // eslint-disable-next-line @next/next/no-img-element -- remote Zepto CDN images, plain img avoids domain allowlisting
+                        <img src={tile.image} alt={tile.name} loading="lazy" />
+                      ) : (
+                        <span className="vision__tile-placeholder">{tile.name.slice(0, 1).toUpperCase()}</span>
+                      )}
+                    </div>
+                    <p className="vision__tile-name">{tile.name}</p>
+                    <div className="vision__tile-meta">
+                      {tile.quantity > 1 && <span>{tile.quantity}×</span>}
+                      {tile.price && <span>{tile.price}</span>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <ul className="vision__items">
+                {order.items.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            )}
 
             <div className="vision__row">
               <span>{order.x402.amountHbar} HBAR fee</span>

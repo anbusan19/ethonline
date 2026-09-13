@@ -22,6 +22,19 @@ export interface ZeptoCartItem {
   name: string;
   quantity: number;
   price: string | null; // e.g. "₹83"
+  image?: string | null;
+}
+
+/** A product matched to a requested item during search/add-to-cart — populated as
+ * soon as the agent finds something, well before checkout completes (or even
+ * succeeds), so the UI has real images/prices to show while "checking out" or
+ * "awaiting_user_decision", not only after a full completed order. */
+export interface MatchedProduct {
+  requestedAs: string;
+  name: string | null;
+  price: string | null;
+  image: string | null;
+  url: string | null;
 }
 
 export interface Order {
@@ -35,6 +48,8 @@ export interface Order {
     amountHbar: number;
     payer: string;
   };
+  /** Populated as items are found/added to cart — see MatchedProduct. */
+  products?: MatchedProduct[];
   /** Populated only once the real Zepto Cash purchase is verified. */
   zepto?: {
     items: ZeptoCartItem[];
