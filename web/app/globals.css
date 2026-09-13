@@ -184,6 +184,47 @@ body {
   border-right: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+.console__pane--graph {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.console__pane--graph > .kg,
+.console__pane--graph > .vision {
+  flex: 1;
+  min-height: 0;
+}
+
+.view-toggle {
+  display: flex;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.view-toggle__btn {
+  flex: 1;
+  padding: 10px;
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #6b7280;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: color 0.2s, background-color 0.2s;
+}
+
+.view-toggle__btn:hover {
+  color: #9ca3af;
+}
+
+.view-toggle__btn--active {
+  color: #3b82f6;
+  background: rgba(59, 130, 246, 0.08);
+  box-shadow: inset 0 -2px 0 #3b82f6;
+}
+
 /* ---------- chat panel ---------- */
 
 .chat {
@@ -407,9 +448,154 @@ body {
   color: #ef4444;
 }
 
+.order-card__confirm {
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 0.8rem;
+  color: #60a5fa;
+  padding: 8px 10px;
+  border-radius: 4px;
+  background: rgba(59, 130, 246, 0.08);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.order-card__confirm--done {
+  color: #4ade80;
+  background: rgba(74, 222, 128, 0.08);
+  border-color: rgba(74, 222, 128, 0.25);
+}
+
+.order-card__link {
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 0.75rem;
+  color: #3b82f6;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  width: fit-content;
+}
+
+.order-card__link:hover {
+  color: #60a5fa;
+}
+
+.order-card__links {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
 .order-card__actions {
   display: flex;
   gap: 8px;
+}
+
+/* ---------- agent vision (WebThreads backdrop + live order status) ---------- */
+
+.vision {
+  position: relative;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  background: #050505;
+}
+
+/* Compound selector deliberately: the rendered element carries both
+   "web-threads-container" (from WebThreads.css, position: relative) and
+   "vision__threads" — same specificity as a bare class, so cascade order alone
+   decided the winner and it was the wrong one. Matching both classes here wins on
+   specificity instead of hoping for import order. */
+.web-threads-container.vision__threads {
+  position: absolute;
+  inset: 0;
+}
+
+.vision__scrim {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 0%, rgba(5, 5, 5, 0.5) 100%);
+  pointer-events: none;
+}
+
+.vision__head {
+  position: relative;
+  z-index: 2;
+  padding: 18px 24px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.vision__title {
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.2em;
+  color: #3b82f6;
+  text-transform: uppercase;
+}
+
+.vision__body {
+  position: relative;
+  z-index: 2;
+  height: calc(100% - 55px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.vision__idle-text {
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 0.85rem;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.vision__card {
+  width: 100%;
+  max-width: 380px;
+  background: rgba(5, 5, 5, 0.6);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.vision__status {
+  font-size: 1.1rem;
+  font-weight: 300;
+  color: #ffffff;
+}
+
+.vision__items {
+  font-size: 0.85rem;
+  color: #e5e5e5;
+  padding-left: 16px;
+  list-style: disc;
+}
+
+.vision__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 0.75rem;
+  color: #9ca3af;
+}
+
+.vision__row a {
+  color: #3b82f6;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.vision__row a:hover {
+  color: #60a5fa;
+}
+
+.vision__note {
+  font-size: 0.75rem;
+  color: #ef4444;
 }
 
 .scanline {

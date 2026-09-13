@@ -1,20 +1,42 @@
-// Two panes: the real order/payment flow on the left, the live purchase knowledge
-// graph on the right. ChatPanel (a disconnected placeholder — no agent loop wired up
-// yet) is replaced by OrderPanel, which drives the actual x402/Ledger/Hedera flow.
+// Two panes: the real order/payment flow on the left, a toggle between the live
+// purchase knowledge graph and Agent Vision (ported from Agentry's VoiceStage/
+// "Agentry Vision", retinted — see AgentVision.tsx) on the right. Both panes share
+// OrderContext so Agent Vision reflects the same live order as the panel on the left.
 "use client";
 
+import { useState } from "react";
 import OrderPanel from "@/components/OrderPanel";
 import KnowledgeGraph from "@/components/KnowledgeGraph";
+import AgentVision from "@/components/AgentVision";
+import { OrderProvider } from "@/lib/order-context";
 
 export default function ConsolePage() {
+  const [view, setView] = useState<"graph" | "vision">("graph");
+
   return (
-    <main className="console">
-      <div className="console__pane console__pane--chat">
-        <OrderPanel />
-      </div>
-      <div className="console__pane console__pane--graph">
-        <KnowledgeGraph />
-      </div>
-    </main>
+    <OrderProvider>
+      <main className="console">
+        <div className="console__pane console__pane--chat">
+          <OrderPanel />
+        </div>
+        <div className="console__pane console__pane--graph">
+          <div className="view-toggle">
+            <button
+              className={`view-toggle__btn ${view === "graph" ? "view-toggle__btn--active" : ""}`}
+              onClick={() => setView("graph")}
+            >
+              Purchase graph
+            </button>
+            <button
+              className={`view-toggle__btn ${view === "vision" ? "view-toggle__btn--active" : ""}`}
+              onClick={() => setView("vision")}
+            >
+              Agent vision
+            </button>
+          </div>
+          {view === "graph" ? <KnowledgeGraph /> : <AgentVision />}
+        </div>
+      </main>
+    </OrderProvider>
   );
 }

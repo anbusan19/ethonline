@@ -6,31 +6,12 @@
 //   2. Pay & order — the (editable) proposed list is what actually gets paid for.
 // Payment itself happens server-side (see app/api/create-order/route.ts): the Ledger
 // Key Ring decrypt and Hedera signing never touch the browser.
+//
+// Order/payment state lives in OrderContext (lib/order-context.tsx) — shared with
+// AgentVision, the graph pane's alternate view, so both reflect the same live order.
 
-import { useEffect, useRef, useState } from "react";
-
-interface ZeptoCartItem {
-  name: string;
-  quantity: number;
-  price: string | null;
-}
-
-interface Order {
-  id: string;
-  status:
-    | "payment_settled"
-    | "checking_out"
-    | "awaiting_user_decision"
-    | "completed"
-    | "canceled"
-    | "failed";
-  items: string[];
-  x402: { transactionId: string; amountHbar: number; payer: string };
-  zepto?: { items: ZeptoCartItem[]; total: string | null; orderId: string | null; purchaseLogTxHashes: string[] };
-  failureReason?: string;
-  createdAt: string;
-  updatedAt: string;
-}
+import { useOrder, type Order } from "@/lib/order-context";
+import { hashScanTransactionUrl, sepoliaTxUrl } from "@/lib/explorer-links";
 
 const STATUS_LABEL: Record<Order["status"], string> = {
   payment_settled: "Payment settled — starting checkout",
@@ -51,112 +32,22 @@ const STATUS_COLOR: Record<Order["status"], string> = {
 };
 
 export default function OrderPanel() {
-  const [message, setMessage] = useState("");
-  const [planning, setPlanning] = useState(false);
-  const [itemsText, setItemsText] = useState("");
-  const [reasoning, setReasoning] = useState<string | null>(null);
-  const [paying, setPaying] = useState(false);
-  const [order, setOrder] = useState<Order | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [busyAction, setBusyAction] = useState<"resume" | "cancel" | null>(null);
-  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  useEffect(() => {
-    return () => {
-      if (pollRef.current) clearInterval(pollRef.current);
-    };
-  }, []);
-
-  function startPolling(orderId: string) {
-    if (pollRef.current) clearInterval(pollRef.current);
-    pollRef.current = setInterval(async () => {
-      const res = await fetch(`/api/orders/${orderId}`, { cache: "no-store" });
-      if (!res.ok) return;
-      const data: Order = await res.json();
-      setOrder(data);
-      if (data.status === "completed" || data.status === "canceled" || data.status === "failed") {
-        if (pollRef.current) clearInterval(pollRef.current);
-      }
-    }, 3000);
-  }
-
-  async function plan() {
-    if (!message.trim()) return;
-    setPlanning(true);
-    setError(null);
-    setReasoning(null);
-
-    try {
-      const res = await fetch("/api/plan", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ message }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.error ?? "Planning failed.");
-        return;
-      }
-      setItemsText(data.items.join("\n"));
-      setReasoning(data.reasoning || null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
-    } finally {
-      setPlanning(false);
-    }
-  }
-
-  async function payAndOrder() {
-    const items = itemsText
-      .split("\n")
-      .map((l) => l.trim())
-      .filter(Boolean);
-    if (items.length === 0) return;
-
-    setPaying(true);
-    setError(null);
-    setOrder(null);
-
-    try {
-      const res = await fetch("/api/create-order", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ items }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.error ?? "Payment failed.");
-        return;
-      }
-
-      const statusRes = await fetch(`/api/orders/${data.orderId}`, { cache: "no-store" });
-      setOrder(await statusRes.json());
-      startPolling(data.orderId);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
-    } finally {
-      setPaying(false);
-    }
-  }
-
-  async function act(action: "resume" | "cancel") {
-    if (!order) return;
-    setBusyAction(action);
-    try {
-      await fetch(`/api/orders/${order.id}/${action}`, { method: "POST" });
-      startPolling(order.id);
-    } finally {
-      setBusyAction(null);
-    }
-  }
-
-  function startOver() {
-    setOrder(null);
-    setItemsText("");
-    setReasoning(null);
-    setMessage("");
-    setError(null);
-  }
+  const {
+    message,
+    setMessage,
+    planning,
+    itemsText,
+    setItemsText,
+    reasoning,
+    paying,
+    order,
+    error,
+    busyAction,
+    plan,
+    payAndOrder,
+    act,
+    startOver,
+  } = useOrder();
 
   return (
     <div className="chat">
@@ -193,6 +84,16 @@ export default function OrderPanel() {
               <span className="order-card__id">#{order.id.slice(0, 8)}</span>
             </div>
 
+            {/* Explicit, unambiguous confirmation line — this is what answers
+                "is the transaction actually done" without reading the whole card. */}
+            <p className={order.status === "completed" ? "order-card__confirm order-card__confirm--done" : "order-card__confirm"}>
+              {order.status === "completed"
+                ? "✓ Confirmed — service fee settled and product purchase verified on-chain."
+                : order.status === "canceled" || order.status === "failed"
+                  ? "✕ Not completed — see note below."
+                  : "… In progress — the HBAR fee is already settled; watching checkout now."}
+            </p>
+
             <div className="order-card__section">
               <span className="order-card__label">Requested</span>
               <ul className="order-card__list">
@@ -204,9 +105,15 @@ export default function OrderPanel() {
 
             <div className="order-card__section">
               <span className="order-card__label">x402 service fee (Hedera testnet)</span>
-              <p className="order-card__mono">
-                {order.x402.amountHbar} HBAR — tx {order.x402.transactionId}
-              </p>
+              <p className="order-card__mono">{order.x402.amountHbar} HBAR</p>
+              <a
+                className="order-card__link"
+                href={hashScanTransactionUrl(order.x402.transactionId)}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                View transaction on HashScan ↗
+              </a>
             </div>
 
             {order.zepto && (
@@ -223,9 +130,20 @@ export default function OrderPanel() {
                   Total {order.zepto.total} — Zepto order {order.zepto.orderId}
                 </p>
                 {order.zepto.purchaseLogTxHashes.length > 0 && (
-                  <p className="order-card__mono">
-                    PurchaseLog: {order.zepto.purchaseLogTxHashes.length} tx(s) on Ethereum Sepolia
-                  </p>
+                  <div className="order-card__links">
+                    <span className="order-card__label">PurchaseLog (Ethereum Sepolia)</span>
+                    {order.zepto.purchaseLogTxHashes.map((hash, i) => (
+                      <a
+                        key={hash}
+                        className="order-card__link"
+                        href={sepoliaTxUrl(hash)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Item {i + 1} on Etherscan ↗
+                      </a>
+                    ))}
+                  </div>
                 )}
               </div>
             )}
