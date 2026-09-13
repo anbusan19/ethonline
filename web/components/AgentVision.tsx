@@ -100,7 +100,6 @@ export default function AgentVision() {
       <div className="vision__body">
         {!order && (
           <div className="vision__idle">
-            <p className="vision__idle-text">Idle — waiting for a request</p>
           </div>
         )}
 

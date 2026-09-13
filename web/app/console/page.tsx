@@ -25,13 +25,13 @@ export default function ConsolePage() {
               className={`view-toggle__btn ${view === "graph" ? "view-toggle__btn--active" : ""}`}
               onClick={() => setView("graph")}
             >
-              Purchase graph
+              {view === "graph" ? "Purchase graph" : "Graph"}
             </button>
             <button
               className={`view-toggle__btn ${view === "vision" ? "view-toggle__btn--active" : ""}`}
               onClick={() => setView("vision")}
             >
-              Agent vision
+              {view === "vision" ? "Agent vision" : "Vision"}
             </button>
           </div>
           {view === "graph" ? <KnowledgeGraph /> : <AgentVision />}

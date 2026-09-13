@@ -180,7 +180,7 @@ export default function OrderPanel() {
       </div>
 
       {!order && (
-        <div className="chat__input-row" style={{ flexDirection: "column", alignItems: "stretch", gap: 8 }}>
+        <div className="chat__input-row">
           {!itemsText ? (
             <>
               <input
@@ -196,7 +196,7 @@ export default function OrderPanel() {
               </button>
             </>
           ) : (
-            <div style={{ display: "flex", gap: 8 }}>
+            <div className="chat__input-row-inner">
               <button className="chat__send chat__send--muted" onClick={startOver} disabled={paying}>
                 Start over
               </button>
