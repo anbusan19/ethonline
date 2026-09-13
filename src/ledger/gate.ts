@@ -10,7 +10,7 @@
 // wallet-cli regardless.
 //
 // The operator key is decrypted in-process (below), used to build+sign the Hedera
-// TransferTransaction with @hashgraph/sdk in src/x402 (Phase 2), then discarded — the
+// TransferTransaction with @hiero-ledger/sdk in src/x402 (Phase 2), then discarded — the
 // gate is that the key only exists decrypted at the moment it's used, and only this
 // Ledger's ring can decrypt it, never that a physical button press happens per payment.
 //
@@ -43,7 +43,7 @@ const run = promisify(execFile);
  *    `wallet-cli ring encrypt --key $RING_KEY_NAME -i <plaintext-key-file> -o <path>`.
  *
  * The returned key is sensitive: callers must keep it in-memory only (e.g. to build an
- * @hashgraph/sdk PrivateKey via explicit ECDSA parsing — see CLAUDE.md), never log it,
+ * @hiero-ledger/sdk PrivateKey via explicit ECDSA parsing — see CLAUDE.md), never log it,
  * and never write it back to disk.
  *
  * NOT YET EXERCISED END-TO-END: this has not been run against a real ring (no

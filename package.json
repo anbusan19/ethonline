@@ -14,14 +14,22 @@
     "check:all": "npm run check:blocky402 && npm run check:ledger && npm run check:subgraph",
     "contracts:compile": "tsx scripts/compile-contracts.ts",
     "contracts:deploy": "tsx scripts/deploy-purchase-log.ts",
-    "contracts:backfill": "tsx scripts/backfill-purchase-history.ts"
+    "contracts:backfill": "tsx scripts/backfill-purchase-history.ts",
+    "vendor-server": "tsx src/x402/vendor-server.ts",
+    "pay": "tsx scripts/pay-agent.ts"
   },
   "dependencies": {
-    "@hashgraph/sdk": "^2.53.0",
+    "@hiero-ledger/sdk": "^2.88.0",
+    "@x402/core": "^2.25.0",
+    "@x402/express": "^2.25.0",
+    "@x402/fetch": "^2.25.0",
+    "@x402/hedera": "^2.25.0",
     "dotenv": "^16.4.5",
-    "ethers": "^6.13.4"
+    "ethers": "^6.13.4",
+    "express": "^4.21.2"
   },
   "devDependencies": {
+    "@types/express": "^4.17.21",
     "@types/node": "^22.10.0",
     "solc": "^0.8.28",
     "tsx": "^4.19.2",
