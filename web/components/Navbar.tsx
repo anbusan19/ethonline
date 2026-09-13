@@ -38,7 +38,7 @@ const Navbar: React.FC = () => {
       {/* Right Actions */}
       <div className="flex items-center gap-6">
         <a
-          href="https://github.com/anbusan19"
+          href="https://github.com/anbusan19/ethonline2026"
           className="
           relative px-6 py-2
           font-mono text-xs uppercase tracking-wider

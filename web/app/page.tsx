@@ -56,7 +56,7 @@ export default function Home() {
                 "linear-gradient(to right, #ffffff 1px, transparent 1px), linear-gradient(to bottom, #ffffff 1px, transparent 1px)",
             }}
           />
-          <div className="relative w-full md:w-1/2 h-full flex flex-col justify-center px-6 md:px-12 lg:px-20 z-10 pt-32">
+          <div className="relative w-full md:w-1/2 self-stretch flex flex-col justify-center px-6 md:px-12 lg:px-20 z-10 pt-24">
             <p className="font-mono text-blue-500 text-xs tracking-[0.2em] mb-4">// LEDGER-SECURED · GRAPH-POWERED</p>
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-light text-white leading-[1.1] tracking-tight mb-8">
               The pantry
@@ -94,7 +94,7 @@ export default function Home() {
           <p className="text-gray-400 max-w-2xl mb-12 text-sm md:text-base">
             Every completed purchase is a real Hedera testnet transaction, gated by hardware-rooted
             encryption and logged for a subgraph to reason over — see the{" "}
-            <a href="https://github.com/anbusan19" className="text-blue-400 underline underline-offset-4">
+            <a href="https://github.com/anbusan19/ethonline2026" className="text-blue-400 underline underline-offset-4">
               repo
             </a>{" "}
             for the full payment flow.
@@ -175,7 +175,7 @@ export default function Home() {
           <h2 className="text-3xl md:text-4xl font-light text-white mb-4">Three sponsors, one build</h2>
           <p className="text-gray-400 max-w-2xl mb-12 text-sm md:text-base">
             Full qualification checklists and evidence live in the{" "}
-            <a href="https://github.com/anbusan19" className="text-blue-400 underline underline-offset-4">
+            <a href="https://github.com/anbusan19/ethonline2026" className="text-blue-400 underline underline-offset-4">
               README
             </a>
             .
