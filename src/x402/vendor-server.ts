@@ -35,6 +35,7 @@ const resourceServer = new x402ResourceServer(facilitator).register(HEDERA_NETWO
 let lastSettlement: SettleResponse | null = null;
 resourceServer.onAfterSettle(async (ctx) => {
   lastSettlement = ctx.result;
+  console.log(`[x402] Payment settled: tx=${ctx.result?.transaction} payer=${ctx.result?.payer} success=${ctx.result?.success}`);
 });
 
 // @x402/hedera only ships default-asset lookups for USD-pegged HTS tokens, not HBAR
@@ -76,24 +77,27 @@ app.post("/order", async (req, res) => {
   if (!settlement || !settlement.success) {
     // Should be unreachable — paymentMiddleware only calls next() after a successful
     // settle — but never write an order record without real settlement proof.
+    console.warn(`[order] POST /order rejected — no settled payment on record.`);
     res.status(402).json({ error: "Payment was not confirmed settled." });
     return;
   }
 
   const orderId = randomUUID();
-  await createOrder(orderId, items, {
+  console.log(`[order] Creating order ${orderId} for items: ${(items as string[]).join(", ")}`);
+  await createOrder(orderId, items as string[], {
     transactionId: settlement.transaction,
     amountHbar: SERVICE_FEE_HBAR,
     payer: settlement.payer ?? "unknown",
   });
 
+  console.log(`[order] Order ${orderId} created — firing checkout pipeline.`);
   res.status(202).json({ orderId, status: "payment_settled" });
 
   // Fire-and-forget: checkout can take a while (real browser automation) and may
   // pause on insufficient funds — the buyer polls GET /orders/:id or waits for the
   // Telegram notification, not this HTTP response.
   runCheckoutPipeline(orderId).catch((err) => {
-    console.error(`Order ${orderId} pipeline crashed:`, err);
+    console.error(`[order] Order ${orderId} pipeline crashed:`, err);
   });
 });
 
@@ -112,9 +116,10 @@ app.post("/orders/:id/resume", async (req, res) => {
     res.status(404).json({ error: "Order not found." });
     return;
   }
+  console.log(`[order] Resuming order ${order.id} (was: ${order.status})`);
   res.status(202).json({ status: "resuming" });
   runCheckoutPipeline(order.id).catch((err) => {
-    console.error(`Order ${order.id} resume crashed:`, err);
+    console.error(`[order] Order ${order.id} resume crashed:`, err);
   });
 });
 
