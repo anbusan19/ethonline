@@ -1,11 +1,11 @@
-// Ported unchanged from AeroGuard's components/Navbar.tsx. No hooks — safe as
-// a server component (Next.js App Router default).
+// Ported from AeroGuard's components/Navbar.tsx — layout/styling unchanged, nav
+// links swapped for Vault402's real sections. No hooks — safe as a server component.
 import React from "react";
-import { Hexagon, ChevronDown } from "lucide-react";
+import { Hexagon } from "lucide-react";
 
-const NavItem: React.FC<{ text: string; active?: boolean }> = ({ text, active }) => (
+const NavItem: React.FC<{ text: string; href: string; active?: boolean }> = ({ text, href, active }) => (
   <a
-    href="#"
+    href={href}
     className={`
       font-mono text-xs uppercase tracking-widest transition-colors duration-300
       ${active ? "text-white" : "text-gray-500 hover:text-blue-400"}
@@ -29,31 +29,28 @@ const Navbar: React.FC = () => {
 
       {/* Navigation Links - Hidden on small mobile */}
       <div className="hidden md:flex items-center gap-8 lg:gap-12">
-        <NavItem text="Home" active />
-        <NavItem text="Technology" />
-        <NavItem text="Programs" />
-        <NavItem text="Systems" />
-        <NavItem text="Company" />
+        <NavItem text="Home" href="/" active />
+        <NavItem text="How it works" href="/#how" />
+        <NavItem text="Stack" href="/#stack" />
+        <NavItem text="Console" href="/console" />
       </div>
 
       {/* Right Actions */}
       <div className="flex items-center gap-6">
-        <button className="hidden md:flex items-center gap-1 font-mono text-xs text-gray-400 hover:text-white transition-colors">
-          <ChevronDown className="w-3 h-3" /> EN
-        </button>
-
-        <button
+        <a
+          href="https://github.com/anbusan19"
           className="
           relative px-6 py-2
           font-mono text-xs uppercase tracking-wider
           border border-white/20 hover:border-white/60
           transition-all duration-300
           group overflow-hidden
+          inline-block
         "
         >
-          <span className="relative z-10 group-hover:text-black transition-colors duration-300">Contact us</span>
+          <span className="relative z-10 group-hover:text-black transition-colors duration-300">View repo</span>
           <div className="absolute inset-0 bg-white transform -translate-x-full group-hover:translate-x-0 transition-transform duration-300 ease-out z-0"></div>
-        </button>
+        </a>
       </div>
     </nav>
   );
