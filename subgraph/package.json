@@ -1,0 +1,15 @@
+{
+  "name": "vault402-subgraph",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Vault402 PurchaseLog subgraph — Ethereum Sepolia. New this event (Graph Start Fresh pool).",
+  "scripts": {
+    "codegen": "graph codegen",
+    "build": "graph build",
+    "deploy": "graph deploy --studio vault402"
+  },
+  "dependencies": {
+    "@graphprotocol/graph-cli": "^0.98.1",
+    "@graphprotocol/graph-ts": "^0.38.1"
+  }
+}
