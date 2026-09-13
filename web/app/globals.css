@@ -182,7 +182,30 @@ body {
 .console__pane--chat {
   flex: 0 0 25%;
   min-width: 320px;
-  border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.console__resizer {
+  width: 5px;
+  flex-shrink: 0;
+  cursor: col-resize;
+  background: rgba(255, 255, 255, 0.08);
+  position: relative;
+  transition: background-color 0.15s;
+}
+
+.console__resizer:hover,
+.console__resizer:active {
+  background: rgba(59, 130, 246, 0.5);
+}
+
+/* Wider invisible hit area than the visible line, so it's easy to grab. */
+.console__resizer::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -4px;
+  right: -4px;
 }
 
 .console__pane--graph {
