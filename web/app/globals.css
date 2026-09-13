@@ -180,7 +180,8 @@ body {
 }
 
 .console__pane--chat {
-  flex: 0 0 360px;
+  flex: 0 0 25%;
+  min-width: 320px;
   border-right: 1px solid rgba(255, 255, 255, 0.1);
 }
 
