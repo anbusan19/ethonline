@@ -11,9 +11,9 @@ dataSources:
     name: PurchaseLog
     network: sepolia
     source:
-      address: "0x0000000000000000000000000000000000000000" # TODO: fill in after deploy
+      address: "0x38a5766b03F241fD5Bce34bFb9189e4C070FcfB4"
       abi: PurchaseLog
-      startBlock: 0 # TODO: fill in after deploy
+      startBlock: 11695504
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
