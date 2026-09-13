@@ -44,8 +44,8 @@ The Ledger Key Ring's job is scoped to one thing: gating the Hedera operator key
 
 ### Hedera — AI & Agentic Payments on Hedera
 
-- [ ] Live x402-gated service on Hedera testnet, settled through the Blocky402 facilitator
-- [ ] Agent completes at least one real paid request end to end (see [Payment flow](#payment-flow-in-detail))
+- [x] Live x402-gated service on Hedera testnet, settled through the Blocky402 facilitator — `src/x402/vendor-server.ts`, live-synced with Blocky402 at startup
+- [x] Agent completes at least one real paid request end to end (see [Payment flow](#payment-flow-in-detail)) — **verified on-chain**: buyer `0.0.10522350` paid exactly 1 HBAR to agent account `0.0.10523518`, Blocky402's fee-payer covered the network fee, mirror node confirms `SUCCESS`. Transaction: [`0.0.7162784-1789305196-339276347`](https://hashscan.io/testnet/transaction/0.0.7162784-1789305196-339276347)
 - [ ] Public repo with this README covering setup, architecture, and payment flow
 - [ ] Demo video, five minutes or less, showing the paid request executing on-chain
 - Stretch (extra points): on-chain agent identity via ERC-8004, HCS payment audit trail, per-call metering instead of a flat charge
@@ -57,7 +57,7 @@ Verbatim track requirement (ethglobal.com/events/ethonline2026/prizes, "AI Agent
 Vault402 targets the **payment-flow** direction, not the **human-in-the-loop** one — see [Ledger scope](#ledger-scope) for why: the Key Ring gates the Hedera operator key at rest (this Ledger's trustchain), not a live per-payment device confirmation.
 
 - [x] Built fresh during the event on the Ledger Agent Stack, specifically the Ledger Key Ring CLI (`wallet-cli ring`) as the actual key backend for the Hedera operator key — **live**: `ring init` provisioned on a physical Nano S Plus, the real Hedera operator key (`0.0.10522350`, testnet) is encrypted at rest (`contracts/keys/hedera-operator.enc`), and decrypt is verified end-to-end through `src/ledger/gate.ts`
-- [ ] Agent pays for a service via a Ledger-secured, x402-style flow (Blocky402 on Hedera testnet) — key gate is live; the actual payment/settlement flow isn't built yet
+- [x] Agent pays for a service via a Ledger-secured, x402-style flow (Blocky402 on Hedera testnet) — **live**: `scripts/pay-agent.ts` signs with the Ledger-Key-Ring-decrypted operator key, settles for real (see the Hedera checklist above for the verified transaction)
 - [x] No Device Signer Kit / DMK native-signing code — Ledger's role stays scoped to `ring encrypt`/`ring decrypt`
 - [ ] Public repo + demo video showing a live `wallet-cli ring decrypt` unlocking the operator key ahead of a real settlement
 
@@ -74,6 +74,8 @@ Vault402 targets the **payment-flow** direction, not the **human-in-the-loop** o
 - `PurchaseLog`: [`0x38a5766b03F241fD5Bce34bFb9189e4C070FcfB4`](https://sepolia.etherscan.io/address/0x38a5766b03F241fD5Bce34bFb9189e4C070FcfB4) on Ethereum Sepolia (block 11695504)
 - Subgraph: [`vault-402`](https://thegraph.com/studio/subgraph/vault-402) on Subgraph Studio — query at `https://api.studio.thegraph.com/query/1760261/vault-402/v0.1.0`
 - Backfilled with real historical purchase data — **101/101 purchases confirmed on-chain and indexed, zero failures**: 79 unique items, 3 vendors (blinkit, instamart, zepto), `hasIndexingErrors: false`, real historical timestamps preserved throughout. `quantity`/`price` recorded as `1`/`0` placeholders (source data has neither — see [Bootstrapping real history](#bootstrapping-real-history)). Total cost for contract deploy + full backfill: ~0.003 Sepolia ETH.
+- Hedera Key Ring gate: `0.0.10522350` (buyer, operator key ring-encrypted) and `0.0.10523518` (agent's separate receiving account) — both real testnet accounts, keys never touch disk unencrypted.
+- x402 payment flow: **verified live** — a real `POST /order` call paid 1 HBAR from the buyer to the agent account through Blocky402, confirmed `SUCCESS` on Hedera's mirror node ([`0.0.7162784-1789305196-339276347`](https://hashscan.io/testnet/transaction/0.0.7162784-1789305196-339276347)), then correctly paused at `awaiting_user_decision` on checkout (real Zepto Cash balance is genuinely ₹0) — no product purchase logged, exactly as designed.
 
 ---
 
