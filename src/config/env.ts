@@ -34,4 +34,12 @@ export const env = {
   // Intentionally NOT read as a plain string default — see CLAUDE.md: WALLET_PASS
   // must come from OS keychain command substitution, never a literal in .env.
   walletPass: () => optional("WALLET_PASS"),
+  // Path to a real, already-logged-in Playwright persistent profile for Zepto (see
+  // src/checkout/session.ts). Never copied into this repo — real login cookies.
+  zeptoSessionDir: () => required("ZEPTO_SESSION_DIR"),
+  telegramBotToken: () => optional("TELEGRAM_BOT_TOKEN"),
+  telegramChatId: () => optional("TELEGRAM_CHAT_ID"),
+  // Hedera account the x402-gated order endpoint charges into — separate from the
+  // buyer's HEDERA_OPERATOR_ID (see contracts/keys/agent-receiving.enc).
+  agentHederaAccountId: () => required("AGENT_HEDERA_ACCOUNT_ID"),
 };

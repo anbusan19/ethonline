@@ -13,6 +13,8 @@
     "check:subgraph": "tsx scripts/check-subgraph.ts",
     "check:all": "npm run check:blocky402 && npm run check:ledger && npm run check:subgraph",
     "check:hedera-key-gate": "tsx scripts/check-hedera-key-gate.ts",
+    "check:zepto-balance": "tsx scripts/check-zepto-balance.ts",
+    "check:zepto-search": "tsx scripts/check-zepto-search-and-cart.ts",
     "contracts:compile": "tsx scripts/compile-contracts.ts",
     "contracts:deploy": "tsx scripts/deploy-purchase-log.ts",
     "contracts:backfill": "tsx scripts/backfill-purchase-history.ts",
@@ -27,7 +29,8 @@
     "@x402/hedera": "^2.25.0",
     "dotenv": "^16.4.5",
     "ethers": "^6.13.4",
-    "express": "^4.21.2"
+    "express": "^4.21.2",
+    "playwright": "^1.63.0"
   },
   "devDependencies": {
     "@types/express": "^4.17.21",
