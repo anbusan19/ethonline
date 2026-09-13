@@ -11,14 +11,19 @@
     "check:blocky402": "tsx scripts/check-blocky402.ts",
     "check:ledger": "tsx scripts/check-ledger.ts",
     "check:subgraph": "tsx scripts/check-subgraph.ts",
-    "check:all": "npm run check:blocky402 && npm run check:ledger && npm run check:subgraph"
+    "check:all": "npm run check:blocky402 && npm run check:ledger && npm run check:subgraph",
+    "contracts:compile": "tsx scripts/compile-contracts.ts",
+    "contracts:deploy": "tsx scripts/deploy-purchase-log.ts",
+    "contracts:backfill": "tsx scripts/backfill-purchase-history.ts"
   },
   "dependencies": {
     "@hashgraph/sdk": "^2.53.0",
-    "dotenv": "^16.4.5"
+    "dotenv": "^16.4.5",
+    "ethers": "^6.13.4"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
+    "solc": "^0.8.28",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2"
   },
