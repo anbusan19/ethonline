@@ -63,11 +63,17 @@ Vault402 targets the **payment-flow** direction, not the **human-in-the-loop** o
 
 ### The Graph — Best AI Use Case with The Graph (Start Fresh pool)
 
-- [ ] The Graph is load-bearing: the agent uses the Subgraph MCP as its live data source for restock/price reasoning
-- [ ] Live data only — the subgraph indexes real `PurchaseLog` events on Ethereum Sepolia, never mocked or static
+- [ ] The Graph is load-bearing: the agent uses the Subgraph MCP as its live data source for restock/price reasoning — restock math is ported and verified (`src/reasoning/restock.ts`), still reading local data pending the subgraph-backed data source
+- [x] Live data only — the subgraph indexes real `PurchaseLog` events on Ethereum Sepolia, never mocked or static — **live**: see [Live deployment](#live-deployment)
 - [ ] Meaningful reasoning over the data: consumption-rate analysis and restock suggestions, not a raw query dump
-- [ ] Built fresh during the event — no prior project's contracts, subgraph, or deployment reused as the core of this submission
+- [x] Built fresh during the event — no prior project's contracts, subgraph, or deployment reused as the core of this submission
 - [ ] Public repo + README/SKILL.md + demo video (two to four minutes)
+
+### Live deployment
+
+- `PurchaseLog`: [`0x38a5766b03F241fD5Bce34bFb9189e4C070FcfB4`](https://sepolia.etherscan.io/address/0x38a5766b03F241fD5Bce34bFb9189e4C070FcfB4) on Ethereum Sepolia (block 11695504)
+- Subgraph: [`vault-402`](https://thegraph.com/studio/subgraph/vault-402) on Subgraph Studio — query at `https://api.studio.thegraph.com/query/1760261/vault-402/v0.1.0`
+- Backfilled with real historical purchase data (101 records, real timestamps preserved, `quantity`/`price` as `1`/`0` placeholders — see [Bootstrapping real history](#bootstrapping-real-history)) — verified with a live query returning real `Purchase`/`Item`/`Vendor` entities
 
 ---
 
