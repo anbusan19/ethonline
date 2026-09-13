@@ -51,6 +51,12 @@ const routes = {
       price: { asset: "0.0.0", amount: SERVICE_FEE_TINYBAR },
       network: HEDERA_NETWORK,
       payTo: env.agentHederaAccountId(),
+      // Hedera's default payment flow is "authorization" (settle only AFTER the
+      // handler succeeds) — found by testing: the handler saw no settlement at all
+      // under the default. "upfront" settles before the handler runs, matching
+      // CLAUDE.md's described flow (buyer signs, facilitator submits, then the
+      // agent proceeds) and letting the handler use real settlement proof.
+      extra: { paymentFlow: "upfront" },
     },
     description: "Authorizes the agent to place one grocery order on your behalf.",
     mimeType: "application/json",
