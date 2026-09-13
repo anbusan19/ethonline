@@ -19,6 +19,9 @@ export interface GraphViewNode {
   overdue: boolean;
   due_soon: boolean;
   platforms: string[];
+  /** null when there's only one purchase — not enough data for an interval yet. */
+  usual_interval_days: number | null;
+  days_since_last: number;
 }
 
 export interface GraphViewLink {
@@ -94,6 +97,8 @@ export async function loadGraphView(dueThresholdRatio = 0.9, now: Date = new Dat
       overdue,
       due_soon: dueSoon && !overdue,
       platforms: dominantPlatforms(purchases.map((p) => p.vendor)),
+      usual_interval_days: interval !== null ? Math.round(interval * 10) / 10 : null,
+      days_since_last: Math.round(daysSinceLast * 10) / 10,
     };
   });
 

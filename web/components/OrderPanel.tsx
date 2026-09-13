@@ -1,6 +1,9 @@
 "use client";
 
-// Replaces ChatPanel's placeholder — this is the real order flow, browser-driven.
+// The real order flow, browser-driven, in two steps:
+//   1. Plan — a free-text request goes to the agent's Groq-backed planning step
+//      (grounded in live restock data), which proposes a concrete shopping list.
+//   2. Pay & order — the (editable) proposed list is what actually gets paid for.
 // Payment itself happens server-side (see app/api/create-order/route.ts): the Ledger
 // Key Ring decrypt and Hedera signing never touch the browser.
 
@@ -48,7 +51,10 @@ const STATUS_COLOR: Record<Order["status"], string> = {
 };
 
 export default function OrderPanel() {
+  const [message, setMessage] = useState("");
+  const [planning, setPlanning] = useState(false);
   const [itemsText, setItemsText] = useState("");
+  const [reasoning, setReasoning] = useState<string | null>(null);
   const [paying, setPaying] = useState(false);
   const [order, setOrder] = useState<Order | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -72,6 +78,32 @@ export default function OrderPanel() {
         if (pollRef.current) clearInterval(pollRef.current);
       }
     }, 3000);
+  }
+
+  async function plan() {
+    if (!message.trim()) return;
+    setPlanning(true);
+    setError(null);
+    setReasoning(null);
+
+    try {
+      const res = await fetch("/api/plan", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ message }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "Planning failed.");
+        return;
+      }
+      setItemsText(data.items.join("\n"));
+      setReasoning(data.reasoning || null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setPlanning(false);
+    }
   }
 
   async function payAndOrder() {
@@ -118,6 +150,14 @@ export default function OrderPanel() {
     }
   }
 
+  function startOver() {
+    setOrder(null);
+    setItemsText("");
+    setReasoning(null);
+    setMessage("");
+    setError(null);
+  }
+
   return (
     <div className="chat">
       <div className="chat__head">
@@ -125,10 +165,24 @@ export default function OrderPanel() {
       </div>
 
       <div className="chat__scroll">
-        {!order && (
+        {!order && !itemsText && (
           <div className="chat__empty">
-            <p className="chat__greeting">What do you need restocked?</p>
-            <p className="chat__empty-sub">One item per line — paying 1 HBAR authorizes the agent to shop</p>
+            <p className="chat__greeting">What do you need?</p>
+            <p className="chat__empty-sub">Say it in a sentence — the agent checks your real restock data too</p>
+          </div>
+        )}
+
+        {!order && itemsText && (
+          <div className="order-card">
+            <span className="order-card__label">Agent's proposed list (edit freely before paying)</span>
+            <textarea
+              className="chat__input"
+              style={{ resize: "vertical", minHeight: 100 }}
+              value={itemsText}
+              onChange={(e) => setItemsText(e.target.value)}
+              disabled={paying}
+            />
+            {reasoning && <p className="order-card__mono">{reasoning}</p>}
           </div>
         )}
 
@@ -193,25 +247,48 @@ export default function OrderPanel() {
                 </button>
               </div>
             )}
+
+            {(order.status === "completed" || order.status === "canceled" || order.status === "failed") && (
+              <div className="order-card__actions">
+                <button className="chat__send chat__send--muted" onClick={startOver}>
+                  New order
+                </button>
+              </div>
+            )}
           </div>
         )}
 
         {error && <p className="order-card__error">{error}</p>}
       </div>
 
-      <div className="chat__input-row" style={{ flexDirection: "column", alignItems: "stretch", gap: 8 }}>
-        <textarea
-          className="chat__input"
-          style={{ resize: "vertical", minHeight: 60 }}
-          value={itemsText}
-          placeholder={"amul milk 500ml\nbread"}
-          onChange={(e) => setItemsText(e.target.value)}
-          disabled={paying}
-        />
-        <button className="chat__send" onClick={payAndOrder} disabled={paying || !itemsText.trim()}>
-          {paying ? "Paying…" : "Pay 1 HBAR & Order"}
-        </button>
-      </div>
+      {!order && (
+        <div className="chat__input-row" style={{ flexDirection: "column", alignItems: "stretch", gap: 8 }}>
+          {!itemsText ? (
+            <>
+              <input
+                className="chat__input"
+                value={message}
+                placeholder='e.g. "restock the pantry" or "I need milk and bread"'
+                onChange={(e) => setMessage(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && plan()}
+                disabled={planning}
+              />
+              <button className="chat__send" onClick={plan} disabled={planning || !message.trim()}>
+                {planning ? "Planning…" : "Plan"}
+              </button>
+            </>
+          ) : (
+            <div style={{ display: "flex", gap: 8 }}>
+              <button className="chat__send chat__send--muted" onClick={startOver} disabled={paying}>
+                Start over
+              </button>
+              <button className="chat__send" onClick={payAndOrder} disabled={paying || !itemsText.trim()}>
+                {paying ? "Paying…" : "Pay 1 HBAR & Order"}
+              </button>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
