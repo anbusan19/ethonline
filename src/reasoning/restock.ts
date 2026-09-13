@@ -72,12 +72,15 @@ function coPurchaseCounts(records: PurchaseRecord[]): Map<string, Map<string, nu
 }
 
 /**
- * Return items whose typical restock interval says they're due (or overdue) within
- * `withinDays`, each with its top co-purchased items (see coPurchaseCounts above).
+ * Return items whose typical restock interval says they're due, each with its top
+ * co-purchased items (see coPurchaseCounts above). Due threshold is proportional to
+ * the item's own interval (README: daysSinceLastPurchase > averageInterval * 0.9),
+ * not a flat day count — a milk-every-5-days item and a trimmer-every-200-days item
+ * both get flagged at the same *fraction* of their way to the next expected buy.
  */
 export function restockSuggestions(
   records: PurchaseRecord[],
-  withinDays = 3,
+  dueThresholdRatio = 0.9,
   now: Date = new Date()
 ): RestockSuggestion[] {
   const byItem = new Map<string, Date[]>();
@@ -96,15 +99,14 @@ export function restockSuggestions(
 
     const last = new Date(Math.max(...timestamps.map((t) => t.getTime())));
     const daysSinceLast = (now.getTime() - last.getTime()) / 86_400_000;
-    const daysUntilDue = interval - daysSinceLast;
 
-    if (daysUntilDue <= withinDays) {
+    if (daysSinceLast > interval * dueThresholdRatio) {
       const neighbors = [...(coPurchase.get(item)?.entries() ?? [])].sort((a, b) => b[1] - a[1]);
       due.push({
         item,
         usualIntervalDays: Math.round(interval * 10) / 10,
         daysSinceLast: Math.round(daysSinceLast * 10) / 10,
-        overdue: daysUntilDue < 0,
+        overdue: daysSinceLast > interval,
         oftenBoughtWith: neighbors.slice(0, 3).map(([name]) => name),
       });
     }

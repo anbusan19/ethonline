@@ -9,7 +9,7 @@ async function main(): Promise<void> {
   const records = await loadLocalPurchaseHistory("data/purchases_graph.json");
   console.log(`Loaded ${records.length} purchase records.`);
 
-  const due = restockSuggestions(records, 3);
+  const due = restockSuggestions(records);
   console.log(`\n${due.length} item(s) due/overdue for restock:\n`);
   for (const d of due.slice(0, 15)) {
     const status = d.overdue ? "OVERDUE" : "due soon";
