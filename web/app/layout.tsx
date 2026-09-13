@@ -18,7 +18,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Vault402 | Ledger-secured, Graph-powered purchase agent",
+  title: "Agentry | Ledger-secured, Graph-powered purchase agent",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

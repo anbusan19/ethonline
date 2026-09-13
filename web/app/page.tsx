@@ -56,14 +56,12 @@ export default function Home() {
                 "linear-gradient(to right, #ffffff 1px, transparent 1px), linear-gradient(to bottom, #ffffff 1px, transparent 1px)",
             }}
           />
-          <div className="relative w-full md:w-1/2 h-full flex flex-col justify-center px-6 md:px-12 lg:px-20 z-10 pt-28 md:pt-0">
+          <div className="relative w-full md:w-1/2 h-full flex flex-col justify-center px-6 md:px-12 lg:px-20 z-10 pt-32">
             <p className="font-mono text-blue-500 text-xs tracking-[0.2em] mb-4">// LEDGER-SECURED · GRAPH-POWERED</p>
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-light text-white leading-[1.1] tracking-tight mb-8">
               The pantry
               <br />
-              <span className="font-semibold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-500">
-                restocks itself.
-              </span>
+              restocks itself.
             </h1>
             <p className="text-gray-400 max-w-md leading-relaxed mb-10 text-sm md:text-base border-l-2 border-blue-900/50 pl-6">
               An autonomous purchase agent that settles real x402 payments on Hedera testnet, gates its
@@ -133,7 +131,7 @@ export default function Home() {
               <p className="text-gray-400 text-sm md:text-base leading-relaxed">
                 The Ledger's job is scoped to one thing: nobody but this device's Key Ring can ever
                 decrypt the Hedera operator key. That's a stronger guarantee than a live button-press
-                per payment, and it's the one Vault402 actually makes.
+                per payment, and it's the one Agentry actually makes.
               </p>
             </div>
             <ul className="space-y-4 text-sm text-gray-400">

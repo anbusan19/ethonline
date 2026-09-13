@@ -52,7 +52,7 @@ export default function OrderPanel() {
   return (
     <div className="chat">
       <div className="chat__head">
-        <span className="chat__brand">// VAULT402 — PLACE AN ORDER</span>
+        <span className="chat__brand">// AGENTRY — PLACE AN ORDER</span>
       </div>
 
       <div className="chat__scroll">
