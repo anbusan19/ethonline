@@ -10,7 +10,12 @@ contract PurchaseLog {
         address indexed buyer,
         string item,
         uint256 quantity,
-        uint256 price, // price as settled off-chain (HBAR, via Blocky402/Hedera); units TBD
+        // Price of the ACTUAL grocery item, in paise (1 INR = 100 paise) — this is the
+        // Zepto Cash product cost, never the x402/Hedera service fee that authorized
+        // the agent to shop. Those are two separate transactions for two separate
+        // things; only the real product purchase belongs here (see
+        // src/orders/pipeline.ts and CLAUDE.md's flow correction).
+        uint256 price,
         string vendor,
         uint256 timestamp
     );
