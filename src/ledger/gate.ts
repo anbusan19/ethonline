@@ -46,9 +46,9 @@ const run = promisify(execFile);
  * @hiero-ledger/sdk PrivateKey via explicit ECDSA parsing — see CLAUDE.md), never log it,
  * and never write it back to disk.
  *
- * NOT YET EXERCISED END-TO-END: this has not been run against a real ring (no
- * `ring init` has been performed in this environment) — verify with a throwaway key
- * before trusting it with a real Hedera operator key.
+ * Verified end-to-end (scripts/check-hedera-key-gate.ts) against a real ring on a
+ * physical Nano S Plus: ring init, encrypt, and decrypt all succeed, and the decrypted
+ * key's length/prefix match the original — checked without ever printing the full key.
  */
 export async function getHederaOperatorKey(): Promise<string> {
   const walletPass = env.walletPass();

@@ -56,9 +56,9 @@ Verbatim track requirement (ethglobal.com/events/ethonline2026/prizes, "AI Agent
 
 Vault402 targets the **payment-flow** direction, not the **human-in-the-loop** one — see [Ledger scope](#ledger-scope) for why: the Key Ring gates the Hedera operator key at rest (this Ledger's trustchain), not a live per-payment device confirmation.
 
-- [ ] Built fresh during the event on the Ledger Agent Stack, specifically the Ledger Key Ring CLI (`wallet-cli ring`) as the actual key backend for the Hedera operator key
-- [ ] Agent pays for a service via a Ledger-secured, x402-style flow (Blocky402 on Hedera testnet)
-- [ ] No Device Signer Kit / DMK native-signing code — Ledger's role stays scoped to `ring encrypt`/`ring decrypt`
+- [x] Built fresh during the event on the Ledger Agent Stack, specifically the Ledger Key Ring CLI (`wallet-cli ring`) as the actual key backend for the Hedera operator key — **live**: `ring init` provisioned on a physical Nano S Plus, the real Hedera operator key (`0.0.10522350`, testnet) is encrypted at rest (`contracts/keys/hedera-operator.enc`), and decrypt is verified end-to-end through `src/ledger/gate.ts`
+- [ ] Agent pays for a service via a Ledger-secured, x402-style flow (Blocky402 on Hedera testnet) — key gate is live; the actual payment/settlement flow isn't built yet
+- [x] No Device Signer Kit / DMK native-signing code — Ledger's role stays scoped to `ring encrypt`/`ring decrypt`
 - [ ] Public repo + demo video showing a live `wallet-cli ring decrypt` unlocking the operator key ahead of a real settlement
 
 ### The Graph — Best AI Use Case with The Graph (Start Fresh pool)
