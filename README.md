@@ -86,6 +86,25 @@ Vault402 targets the **payment-flow** direction, not the **human-in-the-loop** o
 3. The agent queries the Subgraph MCP in natural language (e.g. "what has this user bought in the last 30 days, and what's overdue for restock").
 4. Restock rule: flag an item when `daysSinceLastPurchase > averageInterval * 0.9`.
 
+### Bootstrapping real history
+
+`PurchaseLog` starts empty on a fresh deploy, which would leave the restock algorithm
+with nothing to reason over until enough new purchases accumulate. To seed it with
+genuine (not mocked) data instead:
+
+```
+npm run contracts:compile    # solc -> contracts/artifacts/PurchaseLog.json
+npm run contracts:deploy     # deploys to Sepolia, patches subgraph/subgraph.yaml
+npm run contracts:backfill -- --dry-run   # preview
+npm run contracts:backfill                # replays real purchase history on-chain
+```
+
+`recordPurchase` takes an explicit `timestamp` param rather than using
+`block.timestamp` — a backfill's transactions all mine "now," so without this every
+replayed purchase would lose its real date and the interval math would be meaningless.
+`quantity`/`price` are recorded as `1`/`0` placeholders where the source history has
+neither, rather than fabricated numbers.
+
 ---
 
 ## Scope — Start Fresh
