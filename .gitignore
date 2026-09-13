@@ -1,0 +1,14 @@
+node_modules/
+dist/
+.env
+*.log
+.DS_Store
+
+# Graph CLI build output
+subgraph/build/
+subgraph/generated/
+
+# Hardhat/Foundry artifacts (contracts placeholder for now)
+contracts/artifacts/
+contracts/cache/
+contracts/out/
