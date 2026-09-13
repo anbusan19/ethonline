@@ -63,7 +63,7 @@ Vault402 targets the **payment-flow** direction, not the **human-in-the-loop** o
 
 ### The Graph — Best AI Use Case with The Graph (Start Fresh pool)
 
-- [ ] The Graph is load-bearing: the agent uses the Subgraph MCP as its live data source for restock/price reasoning — restock math is ported and verified (`src/reasoning/restock.ts`), still reading local data pending the subgraph-backed data source
+- [x] The Graph is load-bearing: restock reasoning (`src/reasoning/restock.ts`) reads live from the deployed subgraph via `src/subgraph/client.ts`, verified — still pending: querying it through the Subgraph MCP specifically, from within the agent loop itself, once that's wired up
 - [x] Live data only — the subgraph indexes real `PurchaseLog` events on Ethereum Sepolia, never mocked or static — **live**: see [Live deployment](#live-deployment)
 - [ ] Meaningful reasoning over the data: consumption-rate analysis and restock suggestions, not a raw query dump
 - [x] Built fresh during the event — no prior project's contracts, subgraph, or deployment reused as the core of this submission
