@@ -12,3 +12,4 @@ subgraph/generated/
 contracts/artifacts/
 contracts/cache/
 contracts/out/
+.claude/
