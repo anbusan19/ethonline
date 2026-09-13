@@ -5,8 +5,9 @@
 //   on Hedera testnet -> PurchaseLog.recordPurchase -> subgraph indexes it ->
 //   agent reasons over live subgraph data for restock/price-comparison suggestions.
 //
-// TODO(Phase 2): implement once the Phase 1 connectivity checks (scripts/check-*.ts)
-// pass and the Ledger/Hedera signing question in src/ledger/gate.ts is resolved.
+// Phase 1 connectivity checks (scripts/check-*.ts) all pass, and the Ledger/Hedera
+// design question is resolved (see src/ledger/gate.ts: Key Ring gates the Hedera
+// operator key only, no native signing). TODO(Phase 2): implement this loop.
 
 async function main(): Promise<void> {
   throw new Error("agent loop: not implemented — Phase 1 (smoke tests) is in progress");

@@ -1,37 +1,74 @@
-// Vault402 — Ledger Key Ring payment gate. PLACEHOLDER.
+// Vault402 — Ledger Key Ring gate for the Hedera operator key.
 //
-// IMPORTANT (flagged, not silently worked around): as of the wallet-cli-usage skill
-// (.agents/skills/wallet-cli-usage/SKILL.md), wallet-cli's supported networks are
-// bitcoin, ethereum, and solana — Hedera is not among them, and `ring` encrypt/decrypt
-// is LKRP-backed encryption of arbitrary files/text, not a general transaction signer.
-// The design in README.md ("wallet-cli ring broker ... requests device approval" for a
-// Hedera TransferTransaction) needs a concrete answer for how physical Nano approval
-// actually gates Hedera signing before Phase 2 payment-flow code is written here.
+// FINAL DESIGN (resolved, do not reopen without flagging it again): Ledger's role is
+// scoped to gating the Hedera operator private key via `wallet-cli ring encrypt` /
+// `ring decrypt` (LKRP-backed, at-rest encryption keyed to this Ledger's trustchain) —
+// NOT native on-device transaction signing. There is no Device Signer Kit / DMK signing
+// code in this repo, and none should be added here: wallet-cli's `send` networks are
+// bitcoin/ethereum/solana only (see .agents/skills/wallet-cli-usage/SKILL.md) — Hedera
+// isn't one of them, so a native on-device Hedera signer isn't available through
+// wallet-cli regardless.
 //
-// CLAUDE.md non-negotiables this module must respect once that's resolved:
-// - No raw key or unscoped API credential ever lives in agent code.
-// - WALLET_PASS must be injected from the OS keychain via $(...) command substitution,
-//   never a literal — and an empty value must abort, not silently skip auth.
-// - Never use --unsecure-no-password for anything touching real data.
-// - Read .agents/skills/wallet-cli-usage/SKILL.md before generating any wallet-cli
-//   invocation from this module.
+// The operator key is decrypted in-process (below), used to build+sign the Hedera
+// TransferTransaction with @hashgraph/sdk in src/x402 (Phase 2), then discarded — the
+// gate is that the key only exists decrypted at the moment it's used, and only this
+// Ledger's ring can decrypt it, never that a physical button press happens per payment.
 //
-// TODO(Phase 2): implement once the Hedera-signing question above is resolved.
+// The PurchaseLog write on Ethereum Sepolia is explicitly OUT of Ledger's scope — it
+// signs with a plain env-var key (src/config/env.ts: ethereumSepoliaPrivateKey), no
+// ring/device involvement, per the final design.
+//
+// CLAUDE.md non-negotiables this module respects:
+// - No raw key ever lives in agent code at rest — only decrypted transiently in memory.
+// - WALLET_PASS must be injected from the OS keychain via $(...), never a literal; an
+//   empty value aborts rather than silently skipping the gate.
+// - Decrypted output is sensitive (SKILL.md): never logged, printed, or written back to
+//   disk — callers must use the returned key in-memory only.
+// - Read .agents/skills/wallet-cli-usage/SKILL.md before generating any wallet-cli call.
 
-export interface PurchaseIntent {
-  item: string;
-  quantity: number;
-  price: string; // decimal string, dollar-denominated at this layer — convert/validate before HBAR use
-  vendor: string;
-}
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
+import { env } from "../config/env.js";
+
+const run = promisify(execFile);
 
 /**
- * Requests physical Ledger Nano approval for a purchase intent before anything signs.
- * NOT IMPLEMENTED — see module header.
+ * Decrypts the Hedera operator private key via the Ledger Key Ring
+ * (`wallet-cli ring decrypt`). Requires:
+ *  - WALLET_PASS set in the environment (from the OS keychain — see .env.example);
+ *    empty/unset aborts rather than silently skipping the gate.
+ *  - Network access — `ring decrypt` calls the LKRP backend to restore the trustchain
+ *    on every invocation, even though no device touch is needed once the ring exists.
+ *  - HEDERA_OPERATOR_KEY_ENC_PATH pointing at key material previously produced by
+ *    `wallet-cli ring encrypt --key $RING_KEY_NAME -i <plaintext-key-file> -o <path>`.
+ *
+ * The returned key is sensitive: callers must keep it in-memory only (e.g. to build an
+ * @hashgraph/sdk PrivateKey via explicit ECDSA parsing — see CLAUDE.md), never log it,
+ * and never write it back to disk.
+ *
+ * NOT YET EXERCISED END-TO-END: this has not been run against a real ring (no
+ * `ring init` has been performed in this environment) — verify with a throwaway key
+ * before trusting it with a real Hedera operator key.
  */
-export async function requestApproval(_intent: PurchaseIntent): Promise<never> {
-  throw new Error(
-    "ledger/gate.requestApproval: not implemented — see src/ledger/gate.ts header for the " +
-      "unresolved Hedera-signing question that must be answered before this is built."
-  );
+export async function getHederaOperatorKey(): Promise<string> {
+  const walletPass = env.walletPass();
+  if (!walletPass) {
+    throw new Error(
+      "WALLET_PASS is empty or unset — aborting rather than silently skipping the Ledger " +
+        "Key Ring gate. Inject it via OS keychain command substitution (see .env.example)."
+    );
+  }
+
+  const encPath = env.hederaOperatorKeyEncPath();
+  const ringKeyName = env.ringKeyName();
+
+  const { stdout } = await run("wallet-cli", ["ring", "decrypt", "--key", ringKeyName, "-i", encPath], {
+    env: { ...process.env, WALLET_PASS: walletPass },
+  });
+
+  const key = stdout.trim();
+  if (!key) {
+    throw new Error("wallet-cli ring decrypt returned no output — refusing to proceed with an empty key.");
+  }
+  return key;
 }
