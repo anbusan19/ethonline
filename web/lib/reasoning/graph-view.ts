@@ -1,42 +1,16 @@
 // Vault402 web — purchase-history graph view, shaped for components/KnowledgeGraph.tsx.
 //
-// Mirrors the restock-interval math in ../../../src/reasoning/restock.ts (see that
-// file's header for provenance/attribution) — duplicated here rather than imported
-// because web/ is a separate Next.js package from the root TS project. TODO: factor
-// into a shared workspace package if this drifts.
-//
-// Data source for now: the NetworkX node-link export at data/purchases_graph.json
-// (gitignored, real personal purchase history) — a MIGRATION SOURCE, same as
-// src/reasoning/local-graph.ts. Once PurchaseLog is deployed and backfilled, this
-// should read from the subgraph instead (see src/subgraph/client.ts, Phase 2).
+// Data source: the LIVE subgraph (via subgraph-client.ts) — the real on-chain
+// PurchaseLog history, not a local file. Co-purchase edges aren't a subgraph entity
+// (the contract logs one item per event), so "bought in the same order" is
+// reconstructed here by grouping purchases with an identical on-chain timestamp,
+// same approach as src/reasoning/restock.ts's coPurchaseCounts (see that file for the
+// reasoning: the backfill/live-purchase path preserves one timestamp per real order).
 //
 // Restock rule per README: due when daysSinceLastPurchase > averageInterval * 0.9,
 // overdue when daysSinceLastPurchase > averageInterval.
 
-import { readFile } from "node:fs/promises";
-import path from "node:path";
-
-interface NodeLinkPurchaseEntry {
-  at?: string;
-  platform?: string;
-}
-type NodeLinkPurchase = string | NodeLinkPurchaseEntry;
-
-interface NodeLinkNode {
-  id: string;
-  purchases: NodeLinkPurchase[];
-}
-
-interface NodeLinkEdge {
-  source: string;
-  target: string;
-  co_purchase: number;
-}
-
-interface NodeLinkGraph {
-  nodes: NodeLinkNode[];
-  edges: NodeLinkEdge[];
-}
+import { fetchPurchaseHistory, type SubgraphPurchase } from "./subgraph-client";
 
 export interface GraphViewNode {
   id: string;
@@ -58,14 +32,6 @@ export interface GraphView {
   links: GraphViewLink[];
 }
 
-function timestampOf(p: NodeLinkPurchase): string {
-  return typeof p === "string" ? p : p.at!;
-}
-
-function platformOf(p: NodeLinkPurchase): string {
-  return typeof p === "string" ? "zepto" : p.platform ?? "zepto";
-}
-
 function averageIntervalDays(timestampsMs: number[]): number | null {
   if (timestampsMs.length < 2) return null;
   const sorted = [...timestampsMs].sort((a, b) => a - b);
@@ -73,47 +39,65 @@ function averageIntervalDays(timestampsMs: number[]): number | null {
   return gaps.reduce((a, b) => a + b, 0) / gaps.length;
 }
 
-/** Every platform a node's purchases came from, most-frequent first — used to color
- * the node by its dominant storefront. */
-function dominantPlatforms(purchases: NodeLinkPurchase[]): string[] {
+function dominantPlatforms(vendors: string[]): string[] {
   const counts = new Map<string, number>();
-  for (const p of purchases) {
-    const platform = platformOf(p);
-    counts.set(platform, (counts.get(platform) ?? 0) + 1);
+  for (const v of vendors) counts.set(v, (counts.get(v) ?? 0) + 1);
+  return [...counts.entries()].sort((a, b) => b[1] - a[1]).map(([v]) => v);
+}
+
+function coPurchaseLinks(records: SubgraphPurchase[]): GraphViewLink[] {
+  const byTimestamp = new Map<number, Set<string>>();
+  for (const r of records) {
+    if (!byTimestamp.has(r.timestampMs)) byTimestamp.set(r.timestampMs, new Set());
+    byTimestamp.get(r.timestampMs)!.add(r.item);
   }
-  return [...counts.entries()].sort((a, b) => b[1] - a[1]).map(([platform]) => platform);
+
+  const weights = new Map<string, number>();
+  for (const items of byTimestamp.values()) {
+    const arr = [...items];
+    for (let i = 0; i < arr.length; i++) {
+      for (let j = i + 1; j < arr.length; j++) {
+        const key = [arr[i], arr[j]].sort().join("::");
+        weights.set(key, (weights.get(key) ?? 0) + 1);
+      }
+    }
+  }
+
+  return [...weights.entries()].map(([key, weight]) => {
+    const [source, target] = key.split("::");
+    return { source, target, weight };
+  });
 }
 
 export async function loadGraphView(dueThresholdRatio = 0.9, now: Date = new Date()): Promise<GraphView> {
-  const dataPath = path.resolve(process.cwd(), "..", "data", "purchases_graph.json");
-  const raw = await readFile(dataPath, "utf-8");
-  const graph: NodeLinkGraph = JSON.parse(raw);
+  const records = await fetchPurchaseHistory();
 
-  const nodes: GraphViewNode[] = graph.nodes.map((n) => {
-    const timestampsMs = n.purchases.map((p) => new Date(timestampOf(p)).getTime());
+  const byItem = new Map<string, SubgraphPurchase[]>();
+  for (const r of records) {
+    if (!byItem.has(r.item)) byItem.set(r.item, []);
+    byItem.get(r.item)!.push(r);
+  }
+
+  const nodes: GraphViewNode[] = [...byItem.entries()].map(([item, purchases]) => {
+    const timestampsMs = purchases.map((p) => p.timestampMs);
     const interval = averageIntervalDays(timestampsMs);
-    const lastMs = timestampsMs.length ? Math.max(...timestampsMs) : null;
-    const daysSinceLast = lastMs !== null ? (now.getTime() - lastMs) / 86_400_000 : null;
+    const lastMs = Math.max(...timestampsMs);
+    const daysSinceLast = (now.getTime() - lastMs) / 86_400_000;
 
-    // README rule: due when daysSinceLastPurchase > averageInterval * 0.9.
-    const dueSoon = interval !== null && daysSinceLast !== null && daysSinceLast > interval * dueThresholdRatio;
-    const overdue = interval !== null && daysSinceLast !== null && daysSinceLast > interval;
+    const dueSoon = interval !== null && daysSinceLast > interval * dueThresholdRatio;
+    const overdue = interval !== null && daysSinceLast > interval;
 
     return {
-      id: n.id,
-      purchase_count: n.purchases.length,
-      last_purchased: lastMs !== null ? new Date(lastMs).toISOString() : null,
+      id: item,
+      purchase_count: purchases.length,
+      last_purchased: new Date(lastMs).toISOString(),
       overdue,
       due_soon: dueSoon && !overdue,
-      platforms: dominantPlatforms(n.purchases),
+      platforms: dominantPlatforms(purchases.map((p) => p.vendor)),
     };
   });
 
-  const links: GraphViewLink[] = graph.edges.map((e) => ({
-    source: e.source,
-    target: e.target,
-    weight: e.co_purchase,
-  }));
+  const links = coPurchaseLinks(records);
 
   return { nodes, links };
 }

@@ -1,13 +1,14 @@
-// Smoke test: run the ported restock algorithm against real local purchase history
-// (data/purchases_graph.json — gitignored, never committed) to confirm the port
-// behaves sensibly before any on-chain/subgraph infra exists.
+// Runs the restock algorithm against the LIVE subgraph — the real data source now
+// that PurchaseLog is deployed and backfilled. src/reasoning/local-graph.ts (the
+// original data source for this script) is retained only as the one-time backfill
+// migration input, not a runtime path.
 
-import { loadLocalPurchaseHistory } from "../src/reasoning/local-graph.js";
+import { fetchPurchaseHistory } from "../src/subgraph/client.js";
 import { restockSuggestions } from "../src/reasoning/restock.js";
 
 async function main(): Promise<void> {
-  const records = await loadLocalPurchaseHistory("data/purchases_graph.json");
-  console.log(`Loaded ${records.length} purchase records.`);
+  const records = await fetchPurchaseHistory();
+  console.log(`Fetched ${records.length} purchase records from the subgraph.`);
 
   const due = restockSuggestions(records);
   console.log(`\n${due.length} item(s) due/overdue for restock:\n`);
