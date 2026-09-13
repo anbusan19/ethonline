@@ -10,6 +10,7 @@
 // Order/payment state lives in OrderContext (lib/order-context.tsx) — shared with
 // AgentVision, the graph pane's alternate view, so both reflect the same live order.
 
+import { useState } from "react";
 import { useOrder, type Order } from "@/lib/order-context";
 import { hashScanTransactionUrl, sepoliaTxUrl } from "@/lib/explorer-links";
 
@@ -49,6 +50,21 @@ export default function OrderPanel() {
     startOver,
   } = useOrder();
 
+  // Human-in-the-loop guard: clicking "Review & Pay" doesn't spend anything by
+  // itself — it only reveals this confirmation step. The real payment only fires
+  // from the explicit "Confirm & Pay" click below.
+  const [showConfirm, setShowConfirm] = useState(false);
+
+  function resetAndStartOver() {
+    setShowConfirm(false);
+    startOver();
+  }
+
+  async function confirmAndPay() {
+    await payAndOrder();
+    setShowConfirm(false);
+  }
+
   return (
     <div className="chat">
       <div className="chat__head">
@@ -63,7 +79,7 @@ export default function OrderPanel() {
           </div>
         )}
 
-        {!order && itemsText && (
+        {!order && itemsText && !showConfirm && (
           <div className="order-card">
             <span className="order-card__label">Agent's proposed list (edit freely before paying)</span>
             <textarea
@@ -74,6 +90,26 @@ export default function OrderPanel() {
               disabled={paying}
             />
             {reasoning && <p className="order-card__mono">{reasoning}</p>}
+          </div>
+        )}
+
+        {!order && itemsText && showConfirm && (
+          <div className="order-card order-card--confirm">
+            <span className="order-card__label">Confirm before paying</span>
+            <ul className="order-card__list">
+              {itemsText
+                .split("\n")
+                .map((l) => l.trim())
+                .filter(Boolean)
+                .map((item, i) => (
+                  <li key={i}>{item}</li>
+                ))}
+            </ul>
+            <p className="order-card__warning">
+              This pays <strong>1 HBAR</strong> on Hedera testnet, right now, to authorize the agent to shop
+              for the list above. The fee is not refunded if you cancel afterward — double-check the list
+              before confirming.
+            </p>
           </div>
         )}
 
@@ -168,7 +204,7 @@ export default function OrderPanel() {
 
             {(order.status === "completed" || order.status === "canceled" || order.status === "failed") && (
               <div className="order-card__actions">
-                <button className="chat__send chat__send--muted" onClick={startOver}>
+                <button className="chat__send chat__send--muted" onClick={resetAndStartOver}>
                   New order
                 </button>
               </div>
@@ -195,13 +231,26 @@ export default function OrderPanel() {
                 {planning ? "Planning…" : "Plan"}
               </button>
             </>
-          ) : (
+          ) : !showConfirm ? (
             <div className="chat__input-row-inner">
-              <button className="chat__send chat__send--muted" onClick={startOver} disabled={paying}>
+              <button className="chat__send chat__send--muted" onClick={resetAndStartOver} disabled={paying}>
                 Start over
               </button>
-              <button className="chat__send" onClick={payAndOrder} disabled={paying || !itemsText.trim()}>
-                {paying ? "Paying…" : "Pay 1 HBAR & Order"}
+              <button
+                className="chat__send"
+                onClick={() => setShowConfirm(true)}
+                disabled={paying || !itemsText.trim()}
+              >
+                Review &amp; Pay
+              </button>
+            </div>
+          ) : (
+            <div className="chat__input-row-inner">
+              <button className="chat__send chat__send--muted" onClick={() => setShowConfirm(false)} disabled={paying}>
+                Back
+              </button>
+              <button className="chat__send" onClick={confirmAndPay} disabled={paying}>
+                {paying ? "Paying…" : "Confirm & Pay 1 HBAR"}
               </button>
             </div>
           )}

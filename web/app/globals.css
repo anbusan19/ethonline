@@ -511,6 +511,25 @@ body {
   color: #ef4444;
 }
 
+.order-card--confirm {
+  border-color: rgba(251, 191, 36, 0.3);
+  background: rgba(251, 191, 36, 0.04);
+}
+
+.order-card__warning {
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: #fbbf24;
+  padding: 8px 10px;
+  border-radius: 4px;
+  background: rgba(251, 191, 36, 0.08);
+  border: 1px solid rgba(251, 191, 36, 0.25);
+}
+
+.order-card__warning strong {
+  color: #ffffff;
+}
+
 .order-card__confirm {
   font-family: var(--font-jetbrains-mono), monospace;
   font-size: 0.8rem;
