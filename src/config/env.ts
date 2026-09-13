@@ -42,4 +42,7 @@ export const env = {
   // Hedera account the x402-gated order endpoint charges into — separate from the
   // buyer's HEDERA_OPERATOR_ID (see contracts/keys/agent-receiving.enc).
   agentHederaAccountId: () => required("AGENT_HEDERA_ACCOUNT_ID"),
+  // Groq (OpenAI-compatible) — the agent's planning step (src/agent/plan.ts): turns
+  // free-text requests into a concrete shopping list, aware of real restock data.
+  groqApiKey: () => required("GROQ_API_KEY"),
 };
