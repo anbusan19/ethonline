@@ -9,6 +9,326 @@ body {
   overflow-x: hidden;
 }
 
+/* ---------- knowledge graph (ported from Agentry's kg__* layout, restyled to
+   AeroGuard's dark/mono tokens instead of its own theme) ---------- */
+
+.kg {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.kg__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  padding: 18px 24px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.kg__title {
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.2em;
+  color: #3b82f6;
+  text-transform: uppercase;
+}
+
+.kg__legend {
+  position: absolute;
+  left: 24px;
+  bottom: 16px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(5, 5, 5, 0.72);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.04em;
+  color: #9ca3af;
+  text-transform: uppercase;
+}
+
+.kg__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #3b82f6;
+  margin-left: 10px;
+}
+
+.kg__dot:first-child {
+  margin-left: 0;
+}
+
+.kg__dot--overdue {
+  background: #ef4444;
+}
+
+.kg__dot--due {
+  background: #e5e5e5;
+}
+
+.kg__dot--zepto {
+  background: #a78bfa;
+}
+
+.kg__dot--blinkit {
+  background: #facc15;
+}
+
+.kg__dot--instamart {
+  background: #fb923c;
+}
+
+.kg__canvas {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+
+.kg__svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.kg__note {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0 40px;
+  color: #9ca3af;
+  font-size: 0.9rem;
+}
+
+.kg__note--error {
+  color: #ef4444;
+}
+
+.kg__note code {
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 0.85em;
+}
+
+.kg__link {
+  stroke: #3b82f6;
+  stroke-opacity: 0.4;
+}
+
+.kg__node circle {
+  fill: #1e40af;
+  stroke: #9ca3af;
+  stroke-width: 1.5px;
+  cursor: grab;
+}
+
+/* Fill by which vendor the item is (mostly) bought on. */
+.kg__node--zepto circle {
+  fill: #a78bfa;
+}
+
+.kg__node--blinkit circle {
+  fill: #facc15;
+}
+
+.kg__node--instamart circle {
+  fill: #fb923c;
+}
+
+/* Restock status reads as a stroke ring on top of the vendor fill, so both
+   signals stay visible at once. */
+.kg__node--due circle {
+  stroke: #e5e5e5;
+  stroke-width: 2px;
+}
+
+.kg__node--overdue circle {
+  stroke: #ef4444;
+  stroke-width: 2.5px;
+}
+
+.kg__label {
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 10px;
+  fill: #9ca3af;
+  pointer-events: none;
+}
+
+/* ---------- console (two-pane chat + graph layout) ---------- */
+
+.console {
+  display: flex;
+  height: 100vh;
+  width: 100%;
+  background: #050505;
+}
+
+.console__pane {
+  flex: 1 1 50%;
+  min-width: 0;
+  height: 100%;
+}
+
+.console__pane--chat {
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* ---------- chat panel ---------- */
+
+.chat {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.chat__head {
+  padding: 18px 24px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.chat__brand {
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.2em;
+  color: #3b82f6;
+  text-transform: uppercase;
+}
+
+.chat__scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.chat__empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-align: center;
+}
+
+.chat__greeting {
+  font-size: 1.5rem;
+  font-weight: 300;
+  color: #ffffff;
+}
+
+.chat__empty-sub {
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 0.8rem;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.chat__msg {
+  display: flex;
+  flex-direction: column;
+  max-width: 80%;
+}
+
+.chat__msg--user {
+  align-self: flex-end;
+  align-items: flex-end;
+}
+
+.chat__msg--agent {
+  align-self: flex-start;
+  align-items: flex-start;
+}
+
+.chat__bubble {
+  padding: 10px 16px;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.chat__msg--user .chat__bubble {
+  background: rgba(59, 130, 246, 0.15);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  color: #e5e5e5;
+}
+
+.chat__msg--agent .chat__bubble {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #e5e5e5;
+}
+
+.chat__time {
+  margin-top: 4px;
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 0.65rem;
+  color: #6b7280;
+}
+
+.chat__input-row {
+  display: flex;
+  gap: 8px;
+  padding: 16px 24px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.chat__input {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  padding: 10px 14px;
+  color: #e5e5e5;
+  font-size: 0.9rem;
+}
+
+.chat__input:focus {
+  outline: none;
+  border-color: rgba(59, 130, 246, 0.5);
+}
+
+.chat__input::placeholder {
+  color: #6b7280;
+}
+
+.chat__send {
+  padding: 10px 20px;
+  background: rgba(59, 130, 246, 0.15);
+  border: 1px solid rgba(59, 130, 246, 0.4);
+  border-radius: 4px;
+  color: #e5e5e5;
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.chat__send:hover:not(:disabled) {
+  background: rgba(59, 130, 246, 0.3);
+}
+
+.chat__send:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .scanline {
   position: fixed;
   top: 0;
