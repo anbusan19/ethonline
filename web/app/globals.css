@@ -329,6 +329,89 @@ body {
   cursor: not-allowed;
 }
 
+.chat__send--muted {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.15);
+  color: #9ca3af;
+}
+
+.chat__send--muted:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* ---------- order card (real order/payment flow) ---------- */
+
+.order-card {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 4px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.order-card__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.order-card__badge {
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border-width: 1px;
+  border-style: solid;
+}
+
+.order-card__id {
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 0.7rem;
+  color: #6b7280;
+}
+
+.order-card__section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.order-card__label {
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #6b7280;
+}
+
+.order-card__list {
+  font-size: 0.85rem;
+  color: #e5e5e5;
+  padding-left: 16px;
+  list-style: disc;
+}
+
+.order-card__mono {
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 0.75rem;
+  color: #9ca3af;
+  word-break: break-all;
+}
+
+.order-card__error {
+  font-size: 0.8rem;
+  color: #ef4444;
+}
+
+.order-card__actions {
+  display: flex;
+  gap: 8px;
+}
+
 .scanline {
   position: fixed;
   top: 0;

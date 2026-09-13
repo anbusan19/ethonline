@@ -40,6 +40,8 @@ export interface Order {
     items: ZeptoCartItem[];
     total: string | null;
     orderId: string | null;
+    /** PurchaseLog transaction hashes, one per item, Ethereum Sepolia. */
+    purchaseLogTxHashes: string[];
   };
   failureReason?: string;
   createdAt: string;

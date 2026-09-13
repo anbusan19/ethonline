@@ -151,6 +151,25 @@ npm run agent          # starts the purchase agent loop
 npm run subgraph:deploy
 ```
 
+### Running the order flow (console UI)
+
+The `/console` page's order panel drives the real payment flow, but the actual Ledger
+Key Ring decrypt + Hedera signing happens server-side, in two separate processes —
+never in the browser:
+
+```
+# Terminal 1 — the x402-gated resource server
+npm run vendor-server
+
+# Terminal 2 — the web app, WALLET_PASS must be in ITS environment too
+# (web/app/api/create-order shells out to scripts/pay-agent.ts, same injection pattern)
+cd web && WALLET_PASS=$(security find-generic-password -a default -s ledger-wallet-cli -w) npm run dev
+```
+
+Then open `http://localhost:3000/console`: enter a shopping list (one item per line),
+pay 1 HBAR, and watch the order's status update live — including the
+resume/cancel actions if Zepto Cash balance is insufficient.
+
 ---
 
 ## Demo videos

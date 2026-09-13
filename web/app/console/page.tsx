@@ -1,16 +1,16 @@
-// Ported from Agentry's app/console/page.tsx: two panes, chat on the left, the
-// purchase knowledge graph on the right. Voice mode / Voice Stage weren't ported
-// (no voice channel exists in Vault402 yet) — just the chat + graph structure.
+// Two panes: the real order/payment flow on the left, the live purchase knowledge
+// graph on the right. ChatPanel (a disconnected placeholder — no agent loop wired up
+// yet) is replaced by OrderPanel, which drives the actual x402/Ledger/Hedera flow.
 "use client";
 
-import ChatPanel from "@/components/ChatPanel";
+import OrderPanel from "@/components/OrderPanel";
 import KnowledgeGraph from "@/components/KnowledgeGraph";
 
 export default function ConsolePage() {
   return (
     <main className="console">
       <div className="console__pane console__pane--chat">
-        <ChatPanel />
+        <OrderPanel />
       </div>
       <div className="console__pane console__pane--graph">
         <KnowledgeGraph />

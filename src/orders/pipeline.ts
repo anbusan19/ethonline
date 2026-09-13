@@ -115,6 +115,7 @@ export async function runCheckoutPipeline(orderId: string): Promise<void> {
     items: cart.items,
     total: cart.total ?? null,
     orderId: result.orderId ?? null,
+    purchaseLogTxHashes: txHashes,
   };
   await updateOrder(orderId, { status: "completed", zepto });
 
