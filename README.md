@@ -73,7 +73,7 @@ Vault402 targets the **payment-flow** direction, not the **human-in-the-loop** o
 
 - `PurchaseLog`: [`0x38a5766b03F241fD5Bce34bFb9189e4C070FcfB4`](https://sepolia.etherscan.io/address/0x38a5766b03F241fD5Bce34bFb9189e4C070FcfB4) on Ethereum Sepolia (block 11695504)
 - Subgraph: [`vault-402`](https://thegraph.com/studio/subgraph/vault-402) on Subgraph Studio — query at `https://api.studio.thegraph.com/query/1760261/vault-402/v0.1.0`
-- Backfilled with real historical purchase data (101 records, real timestamps preserved, `quantity`/`price` as `1`/`0` placeholders — see [Bootstrapping real history](#bootstrapping-real-history)) — verified with a live query returning real `Purchase`/`Item`/`Vendor` entities
+- Backfilled with real historical purchase data — **101/101 purchases confirmed on-chain and indexed, zero failures**: 79 unique items, 3 vendors (blinkit, instamart, zepto), `hasIndexingErrors: false`, real historical timestamps preserved throughout. `quantity`/`price` recorded as `1`/`0` placeholders (source data has neither — see [Bootstrapping real history](#bootstrapping-real-history)). Total cost for contract deploy + full backfill: ~0.003 Sepolia ETH.
 
 ---
 
