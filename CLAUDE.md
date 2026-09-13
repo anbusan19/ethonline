@@ -7,7 +7,7 @@ Context file for Claude Code while building this project. Read this before gener
 An autonomous purchase agent for ETHOnline 2026. Three things must all be true in the final submission:
 
 1. Every payment settles on **Hedera testnet** via **x402**, routed through the **Blocky402 facilitator**.
-2. Every payment is gated by a **physical Ledger Nano approval** via the **Ledger Key Ring CLI** (`wallet-cli ring`) — no raw key or unscoped API credential ever lives in agent code.
+2. Every payment's Hedera operator key is protected at rest by the **Ledger Key Ring CLI** (`wallet-cli ring encrypt`/`ring decrypt`) — decrypted just-in-time, in-process, gated by this Ledger's LKRP trustchain. **Final decision: Key Ring only, not native signing** — no Device Signer Kit/DMK signing code, and no live per-payment device confirmation. The `PurchaseLog` write on Ethereum Sepolia is explicitly out of Ledger's scope and signs with a plain env-var key. No raw key or unscoped API credential ever lives in agent code unencrypted at rest.
 3. Every completed purchase is logged on-chain and indexed by a **subgraph on Ethereum Sepolia**, and the agent's restock/price-comparison logic must genuinely reason over that live data — never mocked, never a raw dump.
 
 Targeting three ETHGlobal sponsor tracks: Hedera (AI & Agentic Payments), Ledger (AI Agents x Ledger), The Graph (Best AI Use Case, **Start Fresh** pool). This is a net-new build for the event — do not reuse prior project-specific code as the core of the Graph submission; general architecture patterns from earlier agents are fine, a lifted prior deployment is not. Full qualification checklists live in `README.md` — keep code changes aligned with those checkboxes, don't silently drop a requirement to save time.
@@ -22,7 +22,8 @@ Targeting three ETHGlobal sponsor tracks: Hedera (AI & Agentic Payments), Ledger
 - Validate units before submitting a transaction — a dollar-denominated price must never be read as a literal HBAR amount.
 
 **Ledger Key Ring / wallet-cli**
-- `wallet-cli` is v2.1.0+, built on the Device Management Kit (DMK). Relevant commands: `account`, `balances`, `operations` (read-only, safe to call without touching the device) vs. `send`, `swap`, `ring` (write, require device confirmation).
+- `wallet-cli` is v2.1.0+, built on the Device Management Kit (DMK). Relevant commands: `account`, `balances`, `operations` (read-only, safe to call without touching the device); `send`, `swap`, `ring init` (write, require live device confirmation); `ring encrypt`/`ring decrypt` (write, but run *without* the device once the ring exists — LKRP-derived keys — this is the command Vault402's Hedera-key gate actually uses).
+- `wallet-cli`'s `send`/native-signing networks are bitcoin, ethereum, and solana only — **not Hedera**. This is why Vault402 uses `ring` to protect the Hedera operator key rather than a native wallet-cli signer for it.
 - `WALLET_PASS` must be injected from the OS keychain via command substitution `$(...)` — **never a literal value**. A literal leaks to shell history, `ps`, CI logs, and any transcript this agent produces.
 - An empty `WALLET_PASS` should abort, not silently skip authentication.
 - `ring init` refuses to overwrite an existing keychain key if the session has no ring metadata — run `ring destroy` first if re-initializing.

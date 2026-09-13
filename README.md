@@ -1,6 +1,6 @@
 # Vault402
 
-A Ledger-secured, Graph-powered autonomous purchase agent. It pays for goods and services over Hedera's x402 rails, gates every payment behind a physical Ledger Nano approval, and reasons over its own on-chain purchase history — indexed by a subgraph — to suggest restocks and compare prices across vendors.
+A Ledger-secured, Graph-powered autonomous purchase agent. It pays for goods and services over Hedera's x402 rails using a Hedera operator key that the Ledger Key Ring (`wallet-cli ring`) protects at rest, and reasons over its own on-chain purchase history — indexed by a subgraph — to suggest restocks and compare prices across vendors.
 
 Built for **ETHOnline 2026**, targeting three sponsor tracks: **Hedera** (AI & Agentic Payments), **Ledger** (AI Agents x Ledger), and **The Graph** (Best AI Use Case, Start Fresh pool). This is a net-new build for the event: no code or deployment from any prior project is reused as the core of the Graph submission.
 
@@ -9,24 +9,23 @@ Built for **ETHOnline 2026**, targeting three sponsor tracks: **Hedera** (AI & A
 ## What it does
 
 1. **Decides** — the agent identifies a purchase to make (restock or new order).
-2. **Proposes** — it builds an x402 payment request and hands it to the Ledger Key Ring broker. No API key or private key ever touches the agent process.
-3. **Approves** — a human physically approves the transaction on the Ledger Nano before anything signs.
-4. **Settles** — the approved transaction is signed, routed through the **Blocky402** facilitator, and settled on **Hedera testnet** in HBAR.
-5. **Logs** — a lightweight `PurchaseLog` contract emits an on-chain event: item, quantity, price, vendor, timestamp.
-6. **Indexes** — a subgraph (deployed on **Ethereum Sepolia**) picks up these events live.
-7. **Reasons** — the agent queries its own purchase history through the **Subgraph MCP** in natural language, computes consumption patterns, and surfaces restock suggestions and cross-vendor price comparisons.
+2. **Unlocks** — it decrypts the Hedera operator key via the Ledger Key Ring (`wallet-cli ring decrypt`). The key is encrypted at rest and only ever exists in plaintext transiently, in-process; only this Ledger's Key Ring can decrypt it. This is a device-trustchain gate, not a live per-payment button press on the Nano — see [Ledger scope](#ledger-scope).
+3. **Settles** — the decrypted key signs a Hedera `TransferTransaction`, routed through the **Blocky402** facilitator, and settled on **Hedera testnet** in HBAR.
+4. **Logs** — a lightweight `PurchaseLog` contract emits an on-chain event: item, quantity, price, vendor, timestamp. This write is on **Ethereum Sepolia** and signs with a plain env-var key — out of Ledger's scope entirely (see below).
+5. **Indexes** — a subgraph (deployed on **Ethereum Sepolia**) picks up these events live.
+6. **Reasons** — the agent queries its own purchase history through the **Subgraph MCP** in natural language, computes consumption patterns, and surfaces restock suggestions and cross-vendor price comparisons.
 
 ```
  agent decides to buy
         |
         v
- Ledger Key Ring (wallet-cli ring) --- physical approval on Nano
+ Ledger Key Ring (wallet-cli ring decrypt) --- unlocks the Hedera operator key
         |
         v
  Blocky402 facilitator --- settles on Hedera testnet (HBAR)
         |
         v
- PurchaseLog contract emits event
+ PurchaseLog contract emits event (Ethereum Sepolia, plain env-var key)
         |
         v
  Subgraph (Ethereum Sepolia) indexes Purchase / Item / Vendor
@@ -34,6 +33,10 @@ Built for **ETHOnline 2026**, targeting three sponsor tracks: **Hedera** (AI & A
         v
  Agent queries via Subgraph MCP --> restock suggestion + price comparison
 ```
+
+### Ledger scope
+
+The Ledger Key Ring's job is scoped to one thing: gating the Hedera operator key. `wallet-cli ring encrypt` puts that key at rest, keyed to this Ledger's LKRP trustchain; `wallet-cli ring decrypt` (called from `src/ledger/gate.ts`) is the only way to get it back, and doing so needs `WALLET_PASS` plus network access to LKRP — not a live device button press per payment. There is no Device Signer Kit / DMK native-signing code anywhere in this repo, and the `PurchaseLog` write on Ethereum Sepolia is intentionally outside Ledger's scope, signing with a plain env-var key instead.
 
 ---
 
@@ -47,12 +50,16 @@ Built for **ETHOnline 2026**, targeting three sponsor tracks: **Hedera** (AI & A
 - [ ] Demo video, five minutes or less, showing the paid request executing on-chain
 - Stretch (extra points): on-chain agent identity via ERC-8004, HCS payment audit trail, per-call metering instead of a flat charge
 
-### Ledger — AI Agents x Ledger
+### Ledger — AI Agents x Ledger ($3,500 pool)
 
-- [ ] Built fresh during the event on the Ledger Agent Stack, specifically the Ledger Key Ring CLI (`wallet-cli ring`)
-- [ ] Human-in-the-loop: Ledger approves the payment before funds move — nothing signs without physical device confirmation
-- [ ] Agent pays for a service via a Ledger-secured, x402-style flow
-- [ ] Public repo + demo video showing a live device approval
+Verbatim track requirement (ethglobal.com/events/ethonline2026/prizes, "AI Agents x Ledger"): *"Both must be built on the Ledger Agent Stack, and in particular on the Ledger Key Ring CLI (wallet-cli ring)"*, with example directions including *"Agents that pay for APIs, tools, or services with Ledger-secured payment flows, including x402-style patterns"* and *"Human-in-the-loop agents where Ledger approves high-risk actions before funds move or permissions escalate."*
+
+Vault402 targets the **payment-flow** direction, not the **human-in-the-loop** one — see [Ledger scope](#ledger-scope) for why: the Key Ring gates the Hedera operator key at rest (this Ledger's trustchain), not a live per-payment device confirmation.
+
+- [ ] Built fresh during the event on the Ledger Agent Stack, specifically the Ledger Key Ring CLI (`wallet-cli ring`) as the actual key backend for the Hedera operator key
+- [ ] Agent pays for a service via a Ledger-secured, x402-style flow (Blocky402 on Hedera testnet)
+- [ ] No Device Signer Kit / DMK native-signing code — Ledger's role stays scoped to `ring encrypt`/`ring decrypt`
+- [ ] Public repo + demo video showing a live `wallet-cli ring decrypt` unlocking the operator key ahead of a real settlement
 
 ### The Graph — Best AI Use Case with The Graph (Start Fresh pool)
 
@@ -67,10 +74,10 @@ Built for **ETHOnline 2026**, targeting three sponsor tracks: **Hedera** (AI & A
 ## Payment flow in detail
 
 1. Agent constructs a purchase intent (item, vendor, price in HBAR).
-2. `wallet-cli ring` broker receives the intent and requests device approval — the raw signing key never leaves the Nano, and the agent never sees a private key or unscoped API credential.
-3. On physical approval, the transaction is frozen with Blocky402's fee-payer (fetched live from Blocky402's `/supported` endpoint — never hardcoded) and submitted.
+2. `src/ledger/gate.ts` calls `wallet-cli ring decrypt` to retrieve the Hedera operator key — this requires `WALLET_PASS` and this Ledger's LKRP trustchain; the key is used in-memory only and never written to disk unencrypted.
+3. The decrypted key signs a Hedera `TransferTransaction`, frozen naming Blocky402's fee-payer (fetched live from Blocky402's `/supported` endpoint — never hardcoded), and submitted.
 4. Settlement asset is HBAR (asset id `0.0.0`) — the default Hedera testnet USDC token has no public faucet, so it is not used.
-5. On confirmation, `PurchaseLog.recordPurchase(...)` is called, emitting the event the subgraph indexes.
+5. On confirmation, `PurchaseLog.recordPurchase(...)` is called on Ethereum Sepolia, signed by a plain env-var key (no Ledger involvement), emitting the event the subgraph indexes.
 
 ## Restock & price-comparison flow in detail
 
@@ -90,20 +97,24 @@ This submission goes in the Graph's Start Fresh pool: every piece — the `Purch
 ## Setup
 
 Prerequisites:
-- Ledger Nano, paired and unlocked
+- Ledger Nano, onboarded (PIN + seed set) — needed physically only once, for `wallet-cli ring init`. After that, `ring encrypt`/`ring decrypt` run without the device (LKRP-derived keys), so day-to-day agent runs don't need it plugged in.
 - `wallet-cli` v2.1.0+ (`npx skills add ledgerhq/agent-skills` for the DMK build skill)
 - Hedera testnet account funded with faucet HBAR
 - Subgraph Studio account + API key
 - Graph CLI (`npm install -g @graphprotocol/graph-cli@latest`)
 - Node.js / TypeScript toolchain
 
-Environment variables (`.env`, never committed):
+Environment variables (`.env`, never committed — see `.env.example` for the full list with comments):
 ```
 HEDERA_OPERATOR_ID=
-HEDERA_OPERATOR_KEY=        # ECDSA
+HEDERA_OPERATOR_KEY_ENC_PATH=      # path to the ring-encrypted operator key, ECDSA
+RING_KEY_NAME=                     # name used with ring encrypt/decrypt
 BLOCKY402_FACILITATOR_URL=
+ETHEREUM_SEPOLIA_PRIVATE_KEY=      # plain key for PurchaseLog writes — no Ledger involvement
+ETHEREUM_SEPOLIA_RPC_URL=
 SUBGRAPH_STUDIO_API_KEY=
-WALLET_PASS=                # inject via keychain at runtime, never a literal
+SUBGRAPH_QUERY_URL=                # query via gateway-arbitrum.network.thegraph.com
+WALLET_PASS=                       # inject via keychain at runtime, never a literal
 ```
 
 Run:
